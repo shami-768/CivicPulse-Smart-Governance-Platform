@@ -1,0 +1,66 @@
+.coming-soon-section {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background-color: var(--bg-light);
+}
+
+.coming-soon-card {
+  background: linear-gradient(135deg, var(--navy-900), var(--navy-800));
+  color: #ffffff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+  padding: 56px 40px;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+
+.coming-soon-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.coming-soon-card h1 {
+  font-size: 1.4rem;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.coming-soon-card h2 {
+  font-size: 1.8rem;
+  margin-bottom: 16px;
+}
+
+.coming-soon-card p {
+  color: #c8d3de;
+  font-size: 0.95rem;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+/* Local copy of the primary button style so this page never
+   depends on which other CSS files happened to load earlier */
+.coming-soon-card .btn-primary-large {
+  background-color: var(--accent);
+  color: var(--navy-900);
+  padding: 12px 26px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.coming-soon-card .btn-primary-large:hover {
+  background-color: #12c2c2;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .coming-soon-card {
+    padding: 40px 24px;
+  }
+}

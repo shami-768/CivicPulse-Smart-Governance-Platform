@@ -1,0 +1,41 @@
+/* ===== CivicPulse Color Palette & Reset ===== */
+:root {
+  --navy-900: #0b1f3a;
+  --navy-800: #132a4e;
+  --blue-600: #1d5fae;
+  --accent: #0ea5a5;
+  --accent-dark: #0b8585;
+  --bg-light: #f5f8fb;
+  --text-dark: #1f2933;
+  --text-muted: #5b6b79;
+  --border: #e1e8ef;
+  --success: #1a9e5c;
+  --danger: #d64545;
+  --warning: #e8a33d;
+  --radius: 10px;
+  --shadow: 0 2px 10px rgba(11, 31, 58, 0.08);
+  --shadow-hover: 0 6px 20px rgba(11, 31, 58, 0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
