@@ -1,51 +1,82 @@
-# CivicPulse-Smart-Governance-Management-Platform
+# 🏛️ CivicPulse — Smart Governance Platform
 
-## Milestone-1
-* **Riya Kumari:** You need to take Slides 2–4.
-* **Asmi:** Slides 5–7.
-* **Sanjana Nitnavare:** Slides 8–10.
-* **Shubhdeep Varshney:** Slides 11–13.
+> A full-stack web application that bridges the gap between citizens and local government — enabling transparent complaint management, real-time status tracking, and data-driven governance.
 
-## Milestone-2 (This Week)
+---
 
-* **Riya Kumari (Frontend):**
-  - Home Page
-  - Citizen Registration
-  - Citizen Login
+## 📌 Table of Contents
 
-* **Shubhdeep Varshney (Frontend):**
-  - Admin Dashboard
-  - Complaint Management
-  - Status Updates
-  - Complaint Tracking
-    
-* **Shamiha Asmi (Backend):**
-  - Authentication
-  - Citizen Management
-  - Department Management
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [API Endpoints](#api-endpoints)
+- [Modules](#modules)
+- [Team](#team)
+- [License](#license)
 
-* **Sanjana Nitnware (Backend):**
-  - Citizen Complaint Management
-  - Admin Complaint Management
-  - Dashboard
+---
 
+## 🌐 Overview
 
-## Milestone-3
+**CivicPulse** is a Smart Governance Platform designed to digitize and streamline the civic complaint management process. It empowers citizens to register and track complaints, enables department officers to manage and resolve issues efficiently, and gives administrators a bird's-eye view of governance operations through dashboards and reports.
 
-* **Riya Kumari (Backend):**
-- Citizen Dashboard
-- Register Complaint
-- Track Complaint
+---
 
-* **Sanjana Nitnware (Frontend):**
-- Citizen Dashboard
-- Register Complaint
-- Track Complaint
+## ✨ Features
 
-* **Shamiha Asmi (Frontend):**
-- Department Dashboard
-- Reports and Analysis
+### 👤 Citizen Module
+- Register & login with secure JWT-based authentication
+- Submit civic complaints with priority levels
+- Track complaint status in real-time
+- Receive notifications on complaint updates
+- Submit feedback on resolved complaints
+- Manage personal profile
 
-* **Shubhdeep Varshney (Backend):**
-- Department Dashboard
-- Reports and Analysis
+### 🏢 Department Officer Module
+- Dedicated login portal
+- View and manage assigned complaints
+- Update complaint statuses
+- Access department-specific dashboards
+
+### 🛡️ Admin Module
+- Admin dashboard with system-wide analytics
+- Manage all complaints across departments
+- Monitor and update complaint statuses
+- Department management and oversight
+- Track complaint resolutions
+- Generate reports and analysis
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| React | 19.x | UI Framework |
+| React Router DOM | 7.x | Client-side Routing |
+| Vite | 8.x | Build Tool & Dev Server |
+| Lucide React | 1.x | Icon Library |
+| Vanilla CSS | — | Styling |
+
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| Java | 17 | Language |
+| Spring Boot | 3.5.5 | Application Framework |
+| Spring Security | — | Authentication & Authorization |
+| Spring Data JPA | — | ORM & Database Access |
+| JWT (jjwt) | 0.12.6 | Token-based Auth |
+| MySQL | — | Primary Database |
+| H2 | — | In-memory DB (Testing) |
+| Lombok | — | Boilerplate Reduction |
+| Maven | — | Build Tool |
+
+---
+
+## 📁 Project Structure
