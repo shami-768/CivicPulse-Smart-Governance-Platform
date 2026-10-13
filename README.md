@@ -247,9 +247,8 @@ Admins get a comprehensive dashboard with key metrics, full complaint management
 | Member | Role | Contributions |
 |---|---|---|
 | **Shamiha Asmi** | Full Stack | Backend Auth, Citizen & Department Management, Frontend Department Dashboard & Reports |
-| **Riya Kumari** | Full Stack | Frontend Home, Registration, Login, Backend Citizen Dashboard, Register & Track Complaint |
-| **Sanjana Nitnavare** | Full Stack | Backend Complaint & Admin Management, Dashboard, Frontend Citizen Dashboard & Complaint Features |
-| **Shubhdeep Varshney** | Full Stack | Frontend Admin Dashboard, Complaint Management, Status & Tracking, Backend Department Dashboard & Reports |
+| **Niranjana** | Full Stack | Frontend Home, Registration, Login, Citizen Dashboard, Register & Track Complaint |
+| **Dharanika** | Full Stack | Backend Complaint & Admin Management, Dashboard, Frontend Admin Dashboard, Status & Tracking |
 
 ---
 
