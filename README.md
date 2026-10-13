@@ -259,6 +259,5 @@ This project is licensed under the MIT License.
 ---
 
 <div align="center">
-  <p>Built with ❤️ by Team D — CivicPulse</p>
   <p><i>"Empowering citizens, enabling transparency, evolving governance."</i></p>
 </div>
