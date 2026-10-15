@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import GeoTagPhotoUploader from "../../components/GeoTagPhotoUploader";
 import "../../styles/RegisterComplaint.css";
 
 function RegisterComplaint() {
@@ -12,6 +13,14 @@ function RegisterComplaint() {
     description: "",
     category: "",
     location: "",
+  });
+
+  const [geoData, setGeoData] = useState({
+    photoUrl: "",
+    latitude: null,
+    longitude: null,
+    accuracy: null,
+    address: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -47,6 +56,31 @@ function RegisterComplaint() {
 
     setSuccessMessage("");
     setDuplicateMessage("");
+  };
+
+  const handleGeoTagChange = (data) => {
+    setGeoData(data);
+    if (data.address && !formData.location.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        location: data.address,
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        location: "",
+      }));
+    }
+  };
+
+  const handleLocationAutoFill = (autoAddress) => {
+    setFormData((prev) => ({
+      ...prev,
+      location: autoAddress,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      location: "",
+    }));
   };
 
   const validate = () => {
@@ -118,12 +152,15 @@ function RegisterComplaint() {
         description: formData.description.trim(),
         category: formData.category,
         location: formData.location.trim(),
+        latitude: geoData.latitude,
+        longitude: geoData.longitude,
+        photoUrl: geoData.photoUrl,
         citizenId: Number(citizenId),
         status: "PENDING",
       };
 
       console.log(
-        "Complaint data:",
+        "Complaint data with Geo-tag:",
         complaintData
       );
 
@@ -170,6 +207,13 @@ function RegisterComplaint() {
             category: "",
             location: "",
           });
+          setGeoData({
+            photoUrl: "",
+            latitude: null,
+            longitude: null,
+            accuracy: null,
+            address: "",
+          });
 
           return;
         }
@@ -191,6 +235,14 @@ function RegisterComplaint() {
         description: "",
         category: "",
         location: "",
+      });
+
+      setGeoData({
+        photoUrl: "",
+        latitude: null,
+        longitude: null,
+        accuracy: null,
+        address: "",
       });
 
     } catch (error) {
@@ -367,20 +419,54 @@ function RegisterComplaint() {
                 )}
               </div>
 
+              {/* Geo-Tagged Issue Photo & Location Tracking */}
+              <div className="form-group">
+                <GeoTagPhotoUploader
+                  onGeoTagChange={handleGeoTagChange}
+                  onLocationAutoFill={handleLocationAutoFill}
+                  initialPhotoUrl={geoData.photoUrl}
+                  initialLocation={formData.location}
+                />
+              </div>
+
               {/* Location */}
               <div className="form-group">
-                <label htmlFor="location">
-                  Location
-                </label>
+                <div className="location-label-row">
+                  <label htmlFor="location">
+                    Incident Location Address
+                  </label>
+                  {geoData.latitude && geoData.longitude && (
+                    <span className="location-gps-badge">
+                      🛰️ GPS: {geoData.latitude.toFixed(5)}, {geoData.longitude.toFixed(5)}
+                    </span>
+                  )}
+                </div>
 
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="e.g. Ghaziabad"
-                />
+                <div className="location-input-wrapper">
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    placeholder="Enter street, landmark, area or city (auto-filled by Geo-Tag photo)"
+                  />
+                  {geoData.latitude && geoData.longitude && (
+                    <a
+                      href={`https://www.google.com/maps?q=${geoData.latitude},${geoData.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="location-map-btn"
+                      title="Verify pin on Google Maps"
+                    >
+                      📍 View Map
+                    </a>
+                  )}
+                </div>
+
+                <span className="field-hint">
+                  💡 Tip: The location is automatically resolved when you take or upload a Geo-Tagged photo above. You can also edit it manually.
+                </span>
 
                 {errors.location && (
                   <span className="error-text">

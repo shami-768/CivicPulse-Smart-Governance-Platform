@@ -884,7 +884,18 @@ const DepartmentDashboard = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="modal-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+              <button
+                type="button"
+                className="export-btn"
+                style={{ padding: "8px 16px", fontSize: "13px", cursor: "pointer" }}
+                onClick={() => {
+                  setActiveModalDept(null);
+                  navigate("/admin/complaints");
+                }}
+              >
+                📁 View Complaints & Breakdown ➔
+              </button>
               <button className="table-action-btn" onClick={() => setActiveModalDept(null)}>
                 Close
               </button>

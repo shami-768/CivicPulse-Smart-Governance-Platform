@@ -18,6 +18,9 @@ function TrackComplaint() {
   const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("NEWEST");
 
+  // Geo-tag photo modal
+  const [selectedPhotoModal, setSelectedPhotoModal] = useState(null);
+
   useEffect(() => {
     fetchComplaints();
   }, []);
@@ -593,6 +596,48 @@ function TrackComplaint() {
                       </div>
 
                     </div>
+
+                    {/* Geo-Tagged Photo & Location Tracking Section */}
+                    {(complaint.photoUrl || (complaint.latitude && complaint.longitude)) && (
+                      <div className="track-geotag-section">
+                        {complaint.photoUrl && (
+                          <div
+                            className="track-photo-thumbnail-box"
+                            onClick={() => setSelectedPhotoModal(complaint)}
+                            title="Click to view full Geo-Tagged photo"
+                          >
+                            <img
+                              src={complaint.photoUrl}
+                              alt="Geo-tagged issue"
+                              className="track-thumbnail-img"
+                            />
+                            <span className="track-photo-overlay">
+                              🔍 View Geo-Tagged Photo
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="track-geo-info">
+                          {complaint.latitude && complaint.longitude && (
+                            <div className="track-gps-pill">
+                              <span className="gps-dot"></span>
+                              <strong>GPS:</strong> {Number(complaint.latitude).toFixed(5)}°, {Number(complaint.longitude).toFixed(5)}°
+                            </div>
+                          )}
+
+                          {complaint.latitude && complaint.longitude && (
+                            <a
+                              href={`https://www.google.com/maps?q=${complaint.latitude},${complaint.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="track-map-btn"
+                            >
+                              🗺️ Track on Google Maps ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               )}
@@ -601,6 +646,62 @@ function TrackComplaint() {
           )}
 
       </main>
+
+      {/* Geo-Tag Photo Fullview Modal */}
+      {selectedPhotoModal && (
+        <div
+          className="photo-modal-backdrop"
+          onClick={() => setSelectedPhotoModal(null)}
+        >
+          <div
+            className="photo-modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="photo-modal-header">
+              <div>
+                <span className="modal-badge">📍 Verified Geo-Tag Photo</span>
+                <h3>Complaint #{selectedPhotoModal.id} - {selectedPhotoModal.title}</h3>
+              </div>
+              <button
+                className="modal-close-btn"
+                onClick={() => setSelectedPhotoModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="photo-modal-body">
+              <img
+                src={selectedPhotoModal.photoUrl}
+                alt="Enlarged Geo-Tagged Photo"
+                className="photo-modal-image"
+              />
+            </div>
+
+            <div className="photo-modal-footer">
+              <div className="photo-meta-details">
+                {selectedPhotoModal.latitude && selectedPhotoModal.longitude && (
+                  <span>
+                    <strong>Coordinates:</strong> {Number(selectedPhotoModal.latitude).toFixed(6)}° N, {Number(selectedPhotoModal.longitude).toFixed(6)}° E
+                  </span>
+                )}
+                <span><strong>Location:</strong> {selectedPhotoModal.location}</span>
+              </div>
+
+              {selectedPhotoModal.latitude && selectedPhotoModal.longitude && (
+                <a
+                  href={`https://www.google.com/maps?q=${selectedPhotoModal.latitude},${selectedPhotoModal.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="modal-map-link-btn"
+                >
+                  🗺️ Open in Google Maps ↗
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

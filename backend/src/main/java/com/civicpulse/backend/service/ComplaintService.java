@@ -338,6 +338,15 @@ public class ComplaintService {
         if (updatedComplaint.getIsPublicLocation() != null) {
             existingComplaint.setIsPublicLocation(updatedComplaint.getIsPublicLocation());
         }
+        if (updatedComplaint.getLatitude() != null) {
+            existingComplaint.setLatitude(updatedComplaint.getLatitude());
+        }
+        if (updatedComplaint.getLongitude() != null) {
+            existingComplaint.setLongitude(updatedComplaint.getLongitude());
+        }
+        if (updatedComplaint.getPhotoUrl() != null) {
+            existingComplaint.setPhotoUrl(updatedComplaint.getPhotoUrl());
+        }
 
         long repeatedCount = complaintRepository.countByCategoryIgnoreCaseAndLocationIgnoreCase(
                 existingComplaint.getCategory(), existingComplaint.getLocation());

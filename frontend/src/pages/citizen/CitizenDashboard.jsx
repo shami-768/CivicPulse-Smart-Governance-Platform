@@ -24,6 +24,9 @@ function CitizenDashboard() {
     resolvedComplaints: 0,
   });
 
+  // Geo-tag photo preview modal
+  const [selectedPhotoModal, setSelectedPhotoModal] = useState(null);
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
@@ -646,6 +649,42 @@ function CitizenDashboard() {
 
                     </div>
 
+                    {/* Geo-Tagged Photo & GPS Location */}
+                    {(complaint.photoUrl || (complaint.latitude && complaint.longitude)) && (
+                      <div className="dashboard-geotag-row">
+                        {complaint.photoUrl && (
+                          <div
+                            className="dashboard-photo-thumb"
+                            onClick={() => setSelectedPhotoModal(complaint)}
+                            title="Click to view Geo-Tagged Photo"
+                          >
+                            <img src={complaint.photoUrl} alt="Complaint evidence" />
+                            <span className="photo-thumb-badge">🔍 Geo Photo</span>
+                          </div>
+                        )}
+
+                        <div className="dashboard-geo-meta">
+                          {complaint.latitude && complaint.longitude && (
+                            <span className="dashboard-gps-pill">
+                              <span className="gps-live-dot"></span>
+                              GPS: {Number(complaint.latitude).toFixed(4)}°, {Number(complaint.longitude).toFixed(4)}°
+                            </span>
+                          )}
+
+                          {complaint.latitude && complaint.longitude && (
+                            <a
+                              href={`https://www.google.com/maps?q=${complaint.latitude},${complaint.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="dashboard-map-btn"
+                            >
+                              🗺️ View on Map ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 )
               )}
@@ -695,6 +734,62 @@ function CitizenDashboard() {
         </section>
 
       </main>
+
+      {/* Geo-Tag Photo Fullview Modal */}
+      {selectedPhotoModal && (
+        <div
+          className="photo-modal-backdrop"
+          onClick={() => setSelectedPhotoModal(null)}
+        >
+          <div
+            className="photo-modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="photo-modal-header">
+              <div>
+                <span className="modal-badge">📍 Verified Geo-Tag Photo</span>
+                <h3>Complaint #{selectedPhotoModal.id} - {selectedPhotoModal.title}</h3>
+              </div>
+              <button
+                className="modal-close-btn"
+                onClick={() => setSelectedPhotoModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="photo-modal-body">
+              <img
+                src={selectedPhotoModal.photoUrl}
+                alt="Enlarged Geo-Tagged Photo"
+                className="photo-modal-image"
+              />
+            </div>
+
+            <div className="photo-modal-footer">
+              <div className="photo-meta-details">
+                {selectedPhotoModal.latitude && selectedPhotoModal.longitude && (
+                  <span>
+                    <strong>Coordinates:</strong> {Number(selectedPhotoModal.latitude).toFixed(6)}° N, {Number(selectedPhotoModal.longitude).toFixed(6)}° E
+                  </span>
+                )}
+                <span><strong>Location:</strong> {selectedPhotoModal.location}</span>
+              </div>
+
+              {selectedPhotoModal.latitude && selectedPhotoModal.longitude && (
+                <a
+                  href={`https://www.google.com/maps?q=${selectedPhotoModal.latitude},${selectedPhotoModal.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="modal-map-link-btn"
+                >
+                  🗺️ Open in Google Maps ↗
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

@@ -343,3 +343,67 @@
     max-width: 280px;
   }
 }
+
+/* =========================================
+   LOCATION & GEOTAG FORM ENHANCEMENTS
+   ========================================= */
+
+.location-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.location-label-row label {
+  margin-bottom: 0;
+}
+
+.location-gps-badge {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.location-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.location-input-wrapper input {
+  padding-right: 110px;
+}
+
+.location-map-btn {
+  position: absolute;
+  right: 8px;
+  background: #0284c7;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.location-map-btn:hover {
+  background: #0369a1;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}

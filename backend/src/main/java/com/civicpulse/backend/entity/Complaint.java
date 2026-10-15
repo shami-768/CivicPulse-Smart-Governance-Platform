@@ -41,6 +41,12 @@ public class Complaint {
     private String departmentCode;
     private String departmentName;
 
+    private Double latitude;
+    private Double longitude;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String photoUrl;
+
     private LocalDateTime createdAt;
 
     // Default constructor
@@ -163,6 +169,24 @@ public class Complaint {
     }
     public void setDepartmentName(String departmentName) {
         this.departmentName = departmentName;
+    }
+    public Double getLatitude() {
+        return latitude;
+    }
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+    public Double getLongitude() {
+        return longitude;
+    }
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
     public LocalDateTime getCreatedAt() {
         return createdAt;

@@ -3,10 +3,78 @@ import AdminNavbar from "../../components/AdminNavbar";
 import "../../styles/ComplaintManagement.css";
 
 const INITIAL_MOCK_COMPLAINTS = [
-  { id: "CMP-1001", title: "Major Transformer Explosion", category: "Fire & Emergency", location: "City Hospital Main Gate", createdAt: "2026-09-01", status: "Pending", priority: "CRITICAL", priorityScore: 95, severity: "CRITICAL", affectedPeople: "100+", safetyRisk: true, isPublicLocation: true, priorityBreakdown: "Category (Fire & Emergency): +30 | Severity (CRITICAL): +30 | People Affected (100+): +20 | Safety Risk (YES): +20 | Location (Public): +10 => Total Score: 110 (CRITICAL)" },
-  { id: "CMP-1002", title: "Main Pipeline Burst", category: "Water Supply", location: "Sector 18 Market", createdAt: "2026-09-02", status: "In Progress", priority: "HIGH", priorityScore: 75, severity: "SEVERE", affectedPeople: "21-100", safetyRisk: true, isPublicLocation: true, priorityBreakdown: "Category (Water Supply): +20 | Severity (SEVERE): +20 | People Affected (21-100): +15 | Safety Risk (YES): +20 | Location (Public): +10 => Total Score: 85 (HIGH)" },
-  { id: "CMP-1003", title: "Pothole on Main Avenue", category: "Road", location: "Raj Nagar, Ghaziabad", createdAt: "2026-09-03", status: "Pending", priority: "MEDIUM", priorityScore: 45, severity: "MODERATE", affectedPeople: "6-20", safetyRisk: false, isPublicLocation: true, priorityBreakdown: "Category (Road): +10 | Severity (MODERATE): +10 | People Affected (6-20): +10 | Location (Public): +10 => Total Score: 40 (MEDIUM)" },
-  { id: "CMP-1004", title: "Street Light Flickering", category: "Street Light", location: "Lane 4, Vaishali", createdAt: "2026-09-04", status: "Resolved", priority: "LOW", priorityScore: 25, severity: "MINOR", affectedPeople: "1-5", safetyRisk: false, isPublicLocation: false, priorityBreakdown: "Category (Street Light): +10 | Severity (MINOR): +5 | People Affected (1-5): +5 | Location (Residential): +5 => Total Score: 25 (LOW)" },
+  {
+    id: "CMP-1001",
+    title: "Major Transformer Explosion",
+    category: "Fire & Emergency",
+    location: "City Hospital Main Gate, Civil Lines",
+    createdAt: "2026-09-01",
+    status: "Pending",
+    priority: "CRITICAL",
+    priorityScore: 95,
+    severity: "CRITICAL",
+    affectedPeople: "100+",
+    safetyRisk: true,
+    isPublicLocation: true,
+    latitude: 28.6692,
+    longitude: 77.4538,
+    photoUrl: "https://images.unsplash.com/photo-1542385151-efd9000785a0?w=800&auto=format&fit=crop&q=80",
+    priorityBreakdown: "Category (Fire & Emergency): +30 | Severity (CRITICAL): +30 | People Affected (100+): +20 | Safety Risk (YES): +20 | Location (Public): +10 => Total Score: 110 (CRITICAL)"
+  },
+  {
+    id: "CMP-1002",
+    title: "Main Pipeline Burst & Flooding",
+    category: "Water Supply",
+    location: "Sector 18 Market, Commercial Area",
+    createdAt: "2026-09-02",
+    status: "In Progress",
+    priority: "HIGH",
+    priorityScore: 75,
+    severity: "SEVERE",
+    affectedPeople: "21-100",
+    safetyRisk: true,
+    isPublicLocation: true,
+    latitude: 28.5708,
+    longitude: 77.3261,
+    photoUrl: "https://images.unsplash.com/photo-1584463699042-4541577918a2?w=800&auto=format&fit=crop&q=80",
+    priorityBreakdown: "Category (Water Supply): +20 | Severity (SEVERE): +20 | People Affected (21-100): +15 | Safety Risk (YES): +20 | Location (Public): +10 => Total Score: 85 (HIGH)"
+  },
+  {
+    id: "CMP-1003",
+    title: "Deep Pothole & Road Damage",
+    category: "Road",
+    location: "Raj Nagar, Ghaziabad",
+    createdAt: "2026-09-03",
+    status: "Pending",
+    priority: "MEDIUM",
+    priorityScore: 45,
+    severity: "MODERATE",
+    affectedPeople: "6-20",
+    safetyRisk: false,
+    isPublicLocation: true,
+    latitude: 28.6946,
+    longitude: 77.4378,
+    photoUrl: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=800&auto=format&fit=crop&q=80",
+    priorityBreakdown: "Category (Road): +10 | Severity (MODERATE): +10 | People Affected (6-20): +10 | Location (Public): +10 => Total Score: 40 (MEDIUM)"
+  },
+  {
+    id: "CMP-1004",
+    title: "Street Light Faulty & Wire Dangling",
+    category: "Street Light",
+    location: "Lane 4, Vaishali",
+    createdAt: "2026-09-04",
+    status: "Resolved",
+    priority: "LOW",
+    priorityScore: 25,
+    severity: "MINOR",
+    affectedPeople: "1-5",
+    safetyRisk: false,
+    isPublicLocation: false,
+    latitude: 28.6433,
+    longitude: 77.3402,
+    photoUrl: "https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=800&auto=format&fit=crop&q=80",
+    priorityBreakdown: "Category (Street Light): +10 | Severity (MINOR): +5 | People Affected (1-5): +5 | Location (Residential): +5 => Total Score: 25 (LOW)"
+  },
 ];
 
 const ComplaintManagement = () => {
@@ -228,7 +296,44 @@ const ComplaintManagement = () => {
                       <td><strong>#{complaint.id}</strong></td>
                       <td>{getPriorityBadge(complaint.priority, complaint.priorityScore)}</td>
                       <td>{complaint.category}</td>
-                      <td>{complaint.location}</td>
+                      <td>
+                        <div style={{ fontWeight: "500" }}>{complaint.location}</div>
+                        {(complaint.latitude && complaint.longitude) || complaint.photoUrl ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexWrap: "wrap" }}>
+                            {complaint.latitude && complaint.longitude && (
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  color: "#15803d",
+                                  background: "#f0fdf4",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #bbf7d0",
+                                  fontFamily: "monospace"
+                                }}
+                                title={`GPS Coordinates: ${complaint.latitude}, ${complaint.longitude}`}
+                              >
+                                📍 {Number(complaint.latitude).toFixed(4)}, {Number(complaint.longitude).toFixed(4)}
+                              </span>
+                            )}
+                            {complaint.photoUrl && (
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  color: "#0369a1",
+                                  background: "#e0f2fe",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #bae6fd",
+                                  fontWeight: "600"
+                                }}
+                              >
+                                📷 Geo Photo
+                              </span>
+                            )}
+                          </div>
+                        ) : null}
+                      </td>
                       <td>
                         {complaint.createdAt
                           ? new Date(complaint.createdAt).toLocaleDateString()
@@ -262,78 +367,265 @@ const ComplaintManagement = () => {
         </div>
       </div>
 
-      {/* Priority Breakdown Modal */}
+      {/* Priority Breakdown Modal - Fully Scrollable */}
       {selectedComplaint && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(15, 23, 42, 0.6)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-          padding: "20px"
-        }}>
-          <div style={{
-            background: "white",
-            borderRadius: "16px",
-            maxWidth: "600px",
-            width: "100%",
-            padding: "24px",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+        <div
+          onClick={() => setSelectedComplaint(null)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.72)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px 14px",
+            overflowY: "auto"
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#ffffff",
+              borderRadius: "16px",
+              maxWidth: "680px",
+              width: "100%",
+              maxHeight: "88vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+              overflow: "hidden"
+            }}
+          >
+            {/* Sticky Header */}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "18px 24px",
+              borderBottom: "1px solid #e2e8f0",
+              background: "#ffffff",
+              flexShrink: 0
+            }}>
               <div>
-                <span style={{ fontSize: "12px", fontWeight: "700", color: "#64748b" }}>COMPLAINT #{selectedComplaint.id}</span>
-                <h2 style={{ margin: "4px 0 0 0", color: "#0f172a", fontSize: "20px" }}>{selectedComplaint.title || selectedComplaint.category}</h2>
+                <span style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  COMPLAINT #{selectedComplaint.id}
+                </span>
+                <h2 style={{ margin: "2px 0 0 0", color: "#0f172a", fontSize: "19px", fontWeight: "700" }}>
+                  {selectedComplaint.title || selectedComplaint.category}
+                </h2>
               </div>
               <button
                 onClick={() => setSelectedComplaint(null)}
-                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#64748b" }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "22px",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  lineHeight: 1
+                }}
+                title="Close modal"
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div>Priority Level:</div>
-              {getPriorityBadge(selectedComplaint.priority, selectedComplaint.priorityScore)}
+            {/* Scrollable Body */}
+            <div style={{
+              padding: "20px 24px",
+              overflowY: "auto",
+              flex: "1 1 auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "18px"
+            }}>
+              {/* Priority Level */}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                <span style={{ fontWeight: "600", fontSize: "14px", color: "#334155" }}>Priority Classification:</span>
+                {getPriorityBadge(selectedComplaint.priority, selectedComplaint.priorityScore)}
+              </div>
+
+              {/* Automated Priority Reason */}
+              <div style={{ background: "#f0f9ff", padding: "14px 16px", borderRadius: "10px", border: "1px solid #bae6fd" }}>
+                <h4 style={{ margin: "0 0 5px 0", color: "#0284c7", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>⚡</span> Automated Priority Reason
+                </h4>
+                <p style={{ fontSize: "13.5px", lineHeight: "1.5", color: "#0c4a6e", fontWeight: "600", margin: 0 }}>
+                  {selectedComplaint.priorityReason || selectedComplaint.priorityBreakdown || "Priority calculated automatically based on complaint text, emergency keywords, and location severity."}
+                </p>
+              </div>
+
+              {/* Detailed Score Breakdown */}
+              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                <h5 style={{ margin: "0 0 6px 0", color: "#475569", fontSize: "13px" }}>Scoring Calculation Breakdown</h5>
+                <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0, whiteSpace: "pre-wrap", lineHeight: "1.5" }}>
+                  {selectedComplaint.priorityBreakdown || "Keyword NLP, department weight, and historical repetition scoring applied."}
+                </p>
+              </div>
+
+              {/* Geo-Tagged Photo & GPS Location Verification */}
+              {(selectedComplaint.photoUrl || (selectedComplaint.latitude && selectedComplaint.longitude)) ? (
+                <div style={{
+                  background: "#f0fdf4",
+                  border: "1px solid #86efac",
+                  borderRadius: "12px",
+                  padding: "16px"
+                }}>
+                  <div style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                    marginBottom: "12px"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "18px" }}>📍</span>
+                      <strong style={{ fontSize: "13.5px", color: "#166534" }}>
+                        Verified Geo-Tagged Evidence & Ground Coordinates
+                      </strong>
+                    </div>
+
+                    {selectedComplaint.latitude && selectedComplaint.longitude && (
+                      <a
+                        href={`https://www.google.com/maps?q=${selectedComplaint.latitude},${selectedComplaint.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: "#0284c7",
+                          color: "#ffffff",
+                          padding: "6px 14px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)"
+                        }}
+                      >
+                        🗺️ Open in Google Maps ↗
+                      </a>
+                    )}
+                  </div>
+
+                  {selectedComplaint.latitude && selectedComplaint.longitude && (
+                    <div style={{
+                      fontSize: "12px",
+                      fontFamily: "monospace",
+                      color: "#15803d",
+                      background: "#ffffff",
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      border: "1px solid #bbf7d0",
+                      marginBottom: selectedComplaint.photoUrl ? "12px" : "0",
+                      display: "inline-block"
+                    }}>
+                      🛰️ <strong>GPS:</strong> {Number(selectedComplaint.latitude).toFixed(6)}° N, {Number(selectedComplaint.longitude).toFixed(6)}° E
+                    </div>
+                  )}
+
+                  {selectedComplaint.photoUrl && (
+                    <div style={{
+                      background: "#0f172a",
+                      borderRadius: "10px",
+                      overflow: "hidden",
+                      border: "1px solid #cbd5e1",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center"
+                    }}>
+                      <img
+                        src={selectedComplaint.photoUrl}
+                        alt="Geo-Tagged Issue Evidence"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "260px",
+                          objectFit: "contain",
+                          display: "block",
+                          cursor: "zoom-in"
+                        }}
+                        onClick={() => window.open(selectedComplaint.photoUrl, "_blank")}
+                        title="Click to open full photo in high resolution"
+                      />
+                      <div style={{
+                        width: "100%",
+                        padding: "7px 14px",
+                        background: "rgba(15, 23, 42, 0.95)",
+                        color: "#38bdf8",
+                        fontSize: "11.5px",
+                        fontWeight: "600",
+                        textAlign: "center"
+                      }}>
+                        ✓ CivicPulse Verified Geo-Tag Photo with Embedded Coordinates & Timestamp (Click to open full image)
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{
+                  background: "#f8fafc",
+                  border: "1px dashed #cbd5e1",
+                  borderRadius: "10px",
+                  padding: "12px 16px",
+                  fontSize: "12.5px",
+                  color: "#64748b"
+                }}>
+                  📷 <em>No Geo-Tagged photo was attached with this complaint.</em>
+                </div>
+              )}
+
+              {/* Details Matrix */}
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "12px",
+                fontSize: "13px",
+                color: "#475569",
+                background: "#f8fafc",
+                padding: "14px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0"
+              }}>
+                <div><strong>Category:</strong> {selectedComplaint.category}</div>
+                <div><strong>Incident Location:</strong> {selectedComplaint.location}</div>
+                <div><strong>Priority Score:</strong> {selectedComplaint.priorityScore ?? 0} pts</div>
+                <div><strong>Current Status:</strong> {selectedComplaint.status}</div>
+              </div>
             </div>
 
-            <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "16px" }}>
-              <h4 style={{ margin: "0 0 6px 0", color: "#0369a1" }}>⚡ Automated Priority Reason</h4>
-              <p style={{ fontSize: "14px", lineHeight: "1.5", color: "#0f172a", fontWeight: "600", margin: 0 }}>
-                {selectedComplaint.priorityReason || selectedComplaint.priorityBreakdown || "Priority assigned automatically based on complaint title and description."}
-              </p>
-            </div>
+            {/* Sticky Footer */}
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "14px 24px",
+              borderTop: "1px solid #e2e8f0",
+              background: "#f8fafc",
+              flexShrink: 0
+            }}>
+              <span style={{ fontSize: "12px", color: "#64748b" }}>
+                Status: <strong style={{ color: "#0f172a" }}>{selectedComplaint.status}</strong>
+              </span>
 
-            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "20px" }}>
-              <h5 style={{ margin: "0 0 6px 0", color: "#475569" }}>Detailed Score Breakdown</h5>
-              <p style={{ fontSize: "13px", color: "#64748b", margin: 0, whiteSpace: "pre-wrap" }}>
-                {selectedComplaint.priorityBreakdown || "Title + Description keyword NLP scoring applied."}
-              </p>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "13px", color: "#475569" }}>
-              <div><strong>Category:</strong> {selectedComplaint.category}</div>
-              <div><strong>Location:</strong> {selectedComplaint.location}</div>
-              <div><strong>Priority Score:</strong> {selectedComplaint.priorityScore ?? 0} pts</div>
-              <div><strong>Status:</strong> {selectedComplaint.status}</div>
-            </div>
-
-            <div style={{ marginTop: "24px", textAlign: "right" }}>
               <button
                 onClick={() => setSelectedComplaint(null)}
                 style={{
                   background: "#0f172a",
                   color: "white",
                   border: "none",
-                  padding: "10px 20px",
+                  padding: "9px 22px",
                   borderRadius: "8px",
                   fontWeight: "600",
+                  fontSize: "13px",
                   cursor: "pointer"
                 }}
               >

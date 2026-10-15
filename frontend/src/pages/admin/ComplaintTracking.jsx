@@ -140,6 +140,59 @@ const ComplaintTracking = () => {
                   <p style={{ color: "#0369a1", fontWeight: "600", fontSize: "13px", margin: "4px 0 0 0" }}>{complaint.priorityBreakdown}</p>
                 </div>
               )}
+
+              {/* Geo-Tagged Photo & Location Verification */}
+              {(complaint.photoUrl || (complaint.latitude && complaint.longitude)) && (
+                <div className="description" style={{ background: "#f0fdf4", border: "1px solid #86efac", padding: "14px", borderRadius: "10px", marginTop: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
+                    <span style={{ color: "#166534", fontWeight: "700", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                      📍 Verified Geo-Tag Photo & Incident Location
+                    </span>
+                    {complaint.latitude && complaint.longitude && (
+                      <a
+                        href={`https://www.google.com/maps?q=${complaint.latitude},${complaint.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: "#0284c7",
+                          color: "#ffffff",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          padding: "5px 12px",
+                          borderRadius: "6px",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                      >
+                        🗺️ View on Google Maps ↗
+                      </a>
+                    )}
+                  </div>
+
+                  {complaint.latitude && complaint.longitude && (
+                    <div style={{ fontSize: "12px", fontFamily: "monospace", color: "#15803d", marginBottom: complaint.photoUrl ? "10px" : "0" }}>
+                      <strong>GPS:</strong> {Number(complaint.latitude).toFixed(6)}° N, {Number(complaint.longitude).toFixed(6)}° E
+                    </div>
+                  )}
+
+                  {complaint.photoUrl && (
+                    <div style={{ background: "#0f172a", borderRadius: "8px", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <img
+                        src={complaint.photoUrl}
+                        alt="Geo-Tagged Complaint Photo"
+                        style={{ maxWidth: "100%", maxHeight: "250px", objectFit: "contain", cursor: "pointer", display: "block" }}
+                        onClick={() => window.open(complaint.photoUrl, "_blank")}
+                        title="Click to view full photo in new tab"
+                      />
+                      <div style={{ width: "100%", background: "rgba(15, 23, 42, 0.95)", color: "#38bdf8", fontSize: "11px", fontWeight: "600", textAlign: "center", padding: "4px 8px" }}>
+                        ✓ Verified Geo-Tag Watermark with Live Coordinates
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="current-status">
