@@ -35,15 +35,16 @@ function CitizenDashboard() {
       return;
     }
 
+    let citizenId = 5;
+
     try {
       const parsedUser = JSON.parse(storedUser);
+      if (!parsedUser) {
+        navigate("/login");
+        return;
+      }
       setUser(parsedUser);
-
-      /*
-       * citizenId should come from the login response.
-       * Current account uses citizen ID 5.
-       */
-      const citizenId = parsedUser.citizenId || 5;
+      citizenId = parsedUser.citizenId || parsedUser.id || 5;
 
       // Fetch dashboard statistics
       fetch(
@@ -90,7 +91,7 @@ function CitizenDashboard() {
         });
     } catch (error) {
       console.error("Error reading user data:", error);
-      navigate("/login");
+      setLoading(false);
     }
   }, [navigate]);
 
@@ -698,6 +699,34 @@ function CitizenDashboard() {
                         <span>Complaint ID</span>
                         <strong>
                           #{complaint.id}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>Resolution SLA</span>
+                        <strong style={{ color: "#0284c7" }}>
+                          {complaint.slaHours
+                            ? `${complaint.slaHours} Hours`
+                            : String(complaint.priority).toUpperCase() === "CRITICAL"
+                            ? "12 Hours"
+                            : String(complaint.priority).toUpperCase() === "HIGH"
+                            ? "24 Hours"
+                            : String(complaint.priority).toUpperCase() === "MEDIUM"
+                            ? "48 Hours"
+                            : "72 Hours"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>SLA Status</span>
+                        <strong style={{
+                          color: String(complaint.status).toUpperCase() === "RESOLVED"
+                            ? "#16a34a"
+                            : (complaint.isSlaBreached ? "#dc2626" : "#0284c7")
+                        }}>
+                          {String(complaint.status).toUpperCase() === "RESOLVED"
+                            ? "✓ Resolved (Within SLA)"
+                            : (complaint.isSlaBreached ? "⚠️ SLA Breached" : "⏱ On Track")}
                         </strong>
                       </div>
 

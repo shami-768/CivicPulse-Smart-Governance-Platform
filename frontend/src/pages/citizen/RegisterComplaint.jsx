@@ -29,15 +29,15 @@ function RegisterComplaint() {
   const [isLoading, setIsLoading] = useState(false);
 
   const categories = [
-    "Fire & Emergency",
-    "Street Light",
-    "Road",
-    "Water",
-    "Sanitation",
-    "Garbage",
-    "Drainage",
-    "Electricity",
-    "Other",
+    "Emergency & Public Safety Department",
+    "Electricity & Street Lighting",
+    "Public Works & Infrastructure",
+    "Water Supply & Sewerage",
+    "Sanitation & Waste Management",
+    "Public Health & Hygiene",
+    "Environment & Parks",
+    "Traffic & Transportation",
+    "General Administration Department",
   ];
 
   const handleChange = (e) => {
@@ -473,6 +473,31 @@ function RegisterComplaint() {
                     {errors.location}
                   </span>
                 )}
+              </div>
+
+              {/* Municipal SLA Charter Notice */}
+              <div style={{
+                background: "#f0f9ff",
+                border: "1px solid #bae6fd",
+                borderRadius: "10px",
+                padding: "12px 16px",
+                marginBottom: "20px",
+                fontSize: "12.5px",
+                color: "#0369a1",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "10px"
+              }}>
+                <span style={{ fontSize: "16px" }}>⏱️</span>
+                <div>
+                  <strong style={{ display: "block", color: "#0c4a6e", marginBottom: "2px" }}>
+                    Municipal Charter Guaranteed Resolution SLA
+                  </strong>
+                  <span>
+                    Our Smart Governance AI automatically benchmarks your complaint: 
+                    <strong> Critical & High Hazards: 24h</strong> | <strong>Medium Utility Issues: 48h</strong> | <strong>Low Civil Works: 72h</strong>. Overdue complaints automatically escalate to the Municipal Higher Authority.
+                  </span>
+                </div>
               </div>
 
               {/* Buttons */}

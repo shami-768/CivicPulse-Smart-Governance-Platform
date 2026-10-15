@@ -595,7 +595,51 @@ function TrackComplaint() {
                         </span>
                       </div>
 
+                      <div className="detail-item">
+                        <span className="detail-label">
+                          Resolution SLA
+                        </span>
+
+                        <span className="detail-value" style={{ fontWeight: "700", color: "#0284c7" }}>
+                          {complaint.slaHours
+                            ? `${complaint.slaHours} Hours`
+                            : String(complaint.priority).toUpperCase() === "HIGH" || String(complaint.priority).toUpperCase() === "CRITICAL"
+                            ? "24 Hours"
+                            : String(complaint.priority).toUpperCase() === "MEDIUM"
+                            ? "48 Hours"
+                            : "72 Hours"}
+                        </span>
+                      </div>
+
                     </div>
+
+                    {/* Escalation Notification Banner */}
+                    {complaint.isEscalated && (
+                      <div
+                        style={{
+                          background: "#fff1f2",
+                          border: "1px solid #fecdd3",
+                          borderLeft: "4px solid #e11d48",
+                          borderRadius: "8px",
+                          padding: "10px 14px",
+                          marginTop: "12px",
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                          fontSize: "13px"
+                        }}
+                      >
+                        <span style={{ fontSize: "16px" }}>🚨</span>
+                        <div>
+                          <strong style={{ color: "#be123c", display: "block", marginBottom: "2px" }}>
+                            Escalated to Higher Municipal Authority
+                          </strong>
+                          <span style={{ color: "#475569" }}>
+                            {complaint.escalationReason || "Under direct review by senior municipal executive command for priority resolution."}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Geo-Tagged Photo & Location Tracking Section */}
                     {(complaint.photoUrl || (complaint.latitude && complaint.longitude)) && (

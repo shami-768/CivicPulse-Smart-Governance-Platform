@@ -73,6 +73,19 @@ function Navbar() {
             </>
           )}
 
+          {/* Direct portal links for Officers and Admins */}
+          {currentUser && (currentUser.role === "DEPARTMENT_OFFICER" || currentUser.role === "DEPARTMENT") && (
+            <Link to="/department/dashboard" className="nav-link" style={{ color: "#38bdf8", fontWeight: "700" }}>
+              🏛️ Department Dashboard
+            </Link>
+          )}
+
+          {currentUser && currentUser.role === "ADMIN" && (
+            <Link to="/admin/dashboard" className="nav-link" style={{ color: "#38bdf8", fontWeight: "700" }}>
+              📊 Admin
+            </Link>
+          )}
+
         </div>
 
         {/* Right-side actions */}

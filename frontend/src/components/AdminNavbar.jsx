@@ -34,6 +34,11 @@ const AdminNavbar = () => {
       icon: "📊",
     },
     {
+      label: "Department Dashboard",
+      path: isDepartmentPortal ? "/department/dashboard" : "/admin/departments",
+      icon: "🏛️",
+    },
+    {
       label: "Manage Complaints",
       path: "/admin/complaints",
       icon: "📁",
@@ -58,11 +63,6 @@ const AdminNavbar = () => {
     setMenuOpen(false);
 
     navigate("/");
-  };
-
-  const handleNavigation = (path) => {
-    setMenuOpen(false);
-    navigate(path);
   };
 
   const displayName =
@@ -110,9 +110,10 @@ const AdminNavbar = () => {
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.path ||
-              (item.path === "/admin/departments" &&
+              ((item.path === "/admin/departments" || item.path === "/department/dashboard") &&
                 (location.pathname === "/admin/department-dashboard" ||
-                  location.pathname === "/department/dashboard"));
+                  location.pathname === "/department/dashboard" ||
+                  location.pathname === "/admin/departments"));
 
             return (
               <Link
@@ -191,11 +192,10 @@ const AdminNavbar = () => {
         {navItems.map((item) => {
           const isActive =
             location.pathname === item.path ||
-            (item.path === "/admin/departments" &&
-              (location.pathname ===
-                "/admin/department-dashboard" ||
-                location.pathname ===
-                "/department/dashboard"));
+            ((item.path === "/admin/departments" || item.path === "/department/dashboard") &&
+              (location.pathname === "/admin/department-dashboard" ||
+                location.pathname === "/department/dashboard" ||
+                location.pathname === "/admin/departments"));
 
           return (
             <Link

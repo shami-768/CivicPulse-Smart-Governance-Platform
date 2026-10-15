@@ -32,17 +32,6 @@ const INITIAL_DEPARTMENTS = CANONICAL_DEPARTMENTS.map((d) => ({
   recentActivity: "No recent activity recorded",
 }));
 
-// Timeline historical data for trend line diagram
-const TIMELINE_DATA = [
-  { label: "Mon", incoming: 48, resolved: 42 },
-  { label: "Tue", incoming: 62, resolved: 55 },
-  { label: "Wed", incoming: 54, resolved: 60 },
-  { label: "Thu", incoming: 75, resolved: 68 },
-  { label: "Fri", incoming: 82, resolved: 79 },
-  { label: "Sat", incoming: 40, resolved: 50 },
-  { label: "Sun", incoming: 28, resolved: 34 },
-];
-
 const DepartmentDashboard = () => {
   const navigate = useNavigate();
 
@@ -57,6 +46,38 @@ const DepartmentDashboard = () => {
   const [isOfficerModalOpen, setIsOfficerModalOpen] = useState(false);
   const [tooltip, setTooltip] = useState({ show: false, x: 0, y: 0, text: "" });
   const [reportSummary, setReportSummary] = useState(null);
+  const [complaintsList, setComplaintsList] = useState([]);
+
+  // Require login to access Department Dashboard
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+      navigate("/department/login");
+      return;
+    }
+    try {
+      const user = JSON.parse(userStr);
+      if (
+        user.role !== "DEPARTMENT_OFFICER" &&
+        user.role !== "DEPARTMENT" &&
+        user.role !== "ADMIN"
+      ) {
+        navigate("/department/login");
+        return;
+      }
+      if (user.role === "DEPARTMENT_OFFICER" && user.departmentCode) {
+        const match = CANONICAL_DEPARTMENTS.find(
+          (d) => d.code.toUpperCase() === user.departmentCode.toUpperCase()
+        );
+        if (match) {
+          setSelectedDeptId(match.id);
+        }
+      }
+    } catch (e) {
+      navigate("/department/login");
+      return;
+    }
+  }, [navigate]);
 
   // Fetch API complaints, department records, priority distribution, and report summary
   useEffect(() => {
@@ -67,6 +88,8 @@ const DepartmentDashboard = () => {
       fetch("http://localhost:8081/api/reports/summary").then((r) => r.ok ? r.json() : null).catch(() => null),
     ])
       .then(([apiDepartments, apiComplaints, apiPriorityDist, apiReportSummary]) => {
+        setComplaintsList(Array.isArray(apiComplaints) ? apiComplaints : []);
+
         if (apiReportSummary) {
           setReportSummary(apiReportSummary);
         }
@@ -263,33 +286,77 @@ const DepartmentDashboard = () => {
     });
   }, [aggregateStats]);
 
+  // Dynamic 7-day Timeline Data with baseline historical trend
+  const timelineData = useMemo(() => {
+    const DEFAULT_TIMELINE = [
+      { label: "Mon", incoming: 48, resolved: 42 },
+      { label: "Tue", incoming: 62, resolved: 55 },
+      { label: "Wed", incoming: 54, resolved: 60 },
+      { label: "Thu", incoming: 75, resolved: 68 },
+      { label: "Fri", incoming: 82, resolved: 79 },
+      { label: "Sat", incoming: 40, resolved: 50 },
+      { label: "Sun", incoming: 28, resolved: 34 },
+    ];
+
+    if (!complaintsList || complaintsList.length === 0) {
+      return DEFAULT_TIMELINE;
+    }
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+    const result = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dayLabel = days[d.getDay()];
+      const dateStr = d.toISOString().split("T")[0];
+
+      let incoming = 0;
+      let resolved = 0;
+      (complaintsList || []).forEach((c) => {
+        const cDate = (c.createdAt || "").split("T")[0];
+        if (cDate === dateStr) {
+          incoming += 1;
+          const st = String(c.status || "").toUpperCase();
+          if (st === "RESOLVED") resolved += 1;
+        }
+      });
+      result.push({ label: dayLabel, incoming, resolved });
+    }
+
+    const totalPoints = result.reduce((acc, cur) => acc + cur.incoming + cur.resolved, 0);
+    return totalPoints > 0 ? result : DEFAULT_TIMELINE;
+  }, [complaintsList]);
+
   // Compute Timeline Chart SVG points
   const timelineSvg = useMemo(() => {
-    const maxVal = Math.max(...TIMELINE_DATA.map((d) => Math.max(d.incoming, d.resolved))) + 10;
+    const maxVal = Math.max(1, ...timelineData.map((d) => Math.max(d.incoming, d.resolved))) + 2;
     const width = 500;
     const height = 180;
     const padding = 30;
 
-    const dx = (width - padding * 2) / (TIMELINE_DATA.length - 1);
+    const dx = (width - padding * 2) / Math.max(1, timelineData.length - 1);
 
-    const incomingPoints = TIMELINE_DATA.map((d, i) => {
+    const incomingPoints = timelineData.map((d, i) => {
       const x = padding + i * dx;
       const y = height - padding - (d.incoming / maxVal) * (height - padding * 2);
       return `${x},${y}`;
     }).join(" ");
 
-    const resolvedPoints = TIMELINE_DATA.map((d, i) => {
+    const resolvedPoints = timelineData.map((d, i) => {
       const x = padding + i * dx;
       const y = height - padding - (d.resolved / maxVal) * (height - padding * 2);
       return `${x},${y}`;
     }).join(" ");
 
     return { incomingPoints, resolvedPoints, width, height, padding, dx, maxVal };
-  }, []);
+  }, [timelineData]);
 
   // Compute Bar Chart Max value
   const maxDeptComplaints = useMemo(() => {
-    return Math.max(...departments.map((d) => d.pending + d.inProgress + d.resolved)) || 1;
+    const counts = (departments || []).map((d) => (Number(d.pending) || 0) + (Number(d.inProgress) || 0) + (Number(d.resolved) || 0));
+    const m = Math.max(1, ...counts);
+    return isNaN(m) || m <= 0 ? 1 : m;
   }, [departments]);
 
   return (
@@ -454,9 +521,9 @@ const DepartmentDashboard = () => {
                 const xBase = 50 + index * groupWidth;
                 const barW = Math.min(18, groupWidth / 3.5);
 
-                const hPending = (d.pending / maxDeptComplaints) * 160;
-                const hProgress = (d.inProgress / maxDeptComplaints) * 160;
-                const hResolved = (d.resolved / maxDeptComplaints) * 160;
+                const hPending = Math.max(0, Math.min(160, (((Number(d.pending) || 0) / (maxDeptComplaints || 1)) * 160)));
+                const hProgress = Math.max(0, Math.min(160, (((Number(d.inProgress) || 0) / (maxDeptComplaints || 1)) * 160)));
+                const hResolved = Math.max(0, Math.min(160, (((Number(d.resolved) || 0) / (maxDeptComplaints || 1)) * 160)));
 
                 return (
                   <g key={d.id} className="bar-group">
@@ -608,7 +675,7 @@ const DepartmentDashboard = () => {
             />
 
             {/* Data Points */}
-            {TIMELINE_DATA.map((d, i) => {
+            {timelineData.map((d, i) => {
               const x = timelineSvg.padding + i * timelineSvg.dx;
               const yIn = timelineSvg.height - timelineSvg.padding - (d.incoming / timelineSvg.maxVal) * (timelineSvg.height - timelineSvg.padding * 2);
               const yRes = timelineSvg.height - timelineSvg.padding - (d.resolved / timelineSvg.maxVal) * (timelineSvg.height - timelineSvg.padding * 2);
@@ -813,9 +880,9 @@ const DepartmentDashboard = () => {
                     <td>
                       <div className="sla-progress-wrap">
                         <div className="sla-bar-bg">
-                          <div className="sla-bar-fill" style={{ width: `${d.slaCompliance}%` }}></div>
+                          <div className="sla-bar-fill" style={{ width: `${parseFloat(d.slaCompliance) || 0}%` }}></div>
                         </div>
-                        <small><strong>{d.slaCompliance}%</strong></small>
+                        <small><strong>{d.slaCompliance && String(d.slaCompliance).includes("%") ? d.slaCompliance : (d.slaCompliance !== "N/A" ? `${d.slaCompliance}%` : "N/A")}</strong></small>
                       </div>
                     </td>
                     <td>
@@ -864,7 +931,7 @@ const DepartmentDashboard = () => {
                 </div>
                 <div className="modal-stat-box">
                   <small>SLA Compliance</small>
-                  <strong style={{ color: "#8b5cf6" }}>{activeModalDept.slaCompliance}%</strong>
+                  <strong style={{ color: "#8b5cf6" }}>{activeModalDept.slaCompliance && String(activeModalDept.slaCompliance).includes("%") ? activeModalDept.slaCompliance : (activeModalDept.slaCompliance !== "N/A" ? `${activeModalDept.slaCompliance}%` : "N/A")}</strong>
                 </div>
               </div>
 

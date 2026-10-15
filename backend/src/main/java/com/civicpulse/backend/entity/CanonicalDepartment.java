@@ -39,6 +39,12 @@ public enum CanonicalDepartment {
             return GAD;
         }
 
+        for (CanonicalDepartment dept : values()) {
+            if (dept.getName().equalsIgnoreCase(category.trim()) || dept.getCode().equalsIgnoreCase(category.trim())) {
+                return dept;
+            }
+        }
+
         String cat = category.trim().toLowerCase();
 
         if (cat.contains("fire") || cat.contains("emergency")) {

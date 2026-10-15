@@ -47,6 +47,26 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     """)
     List<Complaint> findAllSortedByPriority();
 
+    List<Complaint> findByIsEscalatedTrue();
+
+    @Query("""
+        SELECT c FROM Complaint c
+        WHERE c.isEscalated = true
+        ORDER BY c.escalatedAt DESC, c.priorityScore DESC
+    """)
+    List<Complaint> findAllEscalatedSorted();
+
+    @Query("""
+        SELECT c FROM Complaint c
+        WHERE (c.isEscalated = false OR c.isEscalated IS NULL)
+        AND UPPER(c.status) NOT IN ('RESOLVED', 'REJECTED')
+        AND c.slaDeadline IS NOT NULL
+        AND c.slaDeadline < CURRENT_TIMESTAMP
+    """)
+    List<Complaint> findBreachedUnescalatedComplaints();
+
+    long countByIsEscalatedTrue();
+
 
     // Count complaints by status
     long countByStatus(String status);

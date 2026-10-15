@@ -26,6 +26,7 @@ import ComplaintManagement from "./pages/admin/ComplaintManagement";
 import StatusUpdates from "./pages/admin/StatusUpdates";
 import ComplaintTracking from "./pages/admin/ComplaintTracking";
 import DepartmentDashboard from "./pages/admin/DepartmentDashboard";
+import EscalatedComplaints from "./pages/admin/EscalatedComplaints";
 
 
 function App() {
@@ -101,6 +102,26 @@ function App() {
           element={<DepartmentDashboard />}
         />
 
+        <Route
+          path="/department-dashboard"
+          element={<DepartmentDashboard />}
+        />
+
+        <Route
+          path="/department"
+          element={<DepartmentDashboard />}
+        />
+
+        <Route
+          path="/departments"
+          element={<DepartmentDashboard />}
+        />
+
+        <Route
+          path="/dept/dashboard"
+          element={<DepartmentDashboard />}
+        />
+
         {/* Complaint Management */}
         <Route
           path="/admin/complaints"
@@ -117,6 +138,17 @@ function App() {
         <Route
           path="/admin/tracking"
           element={<ComplaintTracking />}
+        />
+
+        {/* Escalated Complaints & SLA Breaches (Higher Authority) */}
+        <Route
+          path="/admin/escalations"
+          element={<EscalatedComplaints />}
+        />
+
+        <Route
+          path="/department/escalations"
+          element={<EscalatedComplaints />}
         />
 
         {/* ==================== CITIZEN FEATURES ==================== */}

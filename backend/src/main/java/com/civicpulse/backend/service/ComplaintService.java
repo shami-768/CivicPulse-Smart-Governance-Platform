@@ -1,11 +1,15 @@
 package com.civicpulse.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.civicpulse.backend.dto.DepartmentPriorityDistributionDTO;
@@ -16,6 +20,8 @@ import com.civicpulse.backend.repository.ComplaintRepository;
 
 @Service
 public class ComplaintService {
+
+    private static final Logger log = LoggerFactory.getLogger(ComplaintService.class);
 
     private final ComplaintRepository complaintRepository;
     private final NotificationService notificationService;
@@ -111,6 +117,17 @@ public class ComplaintService {
         complaint.setPriorityBreakdown(result.getBreakdown());
         complaint.setPriorityReason(result.getReason());
 
+        // Assign SLA hours & deadline based on priority (Municipal Smart City Research Benchmark)
+        int slaHours = Complaint.calculateSlaHours(result.getPriority().name());
+        complaint.setSlaHours(slaHours);
+        if (complaint.getCreatedAt() == null) {
+            complaint.setCreatedAt(LocalDateTime.now());
+        }
+        complaint.setSlaDeadline(complaint.getCreatedAt().plusHours(slaHours));
+        complaint.setIsEscalated(false);
+        complaint.setEscalationLevel("LEVEL_1");
+        complaint.setEscalatedTo("Higher Municipal Authority");
+
         Complaint savedComplaint = complaintRepository.save(complaint);
 
         // Create real notification after successful complaint creation
@@ -122,7 +139,8 @@ public class ComplaintService {
                     savedComplaint.getTitle(),
                     "Complaint Received",
                     "Your complaint \"" + savedComplaint.getTitle()
-                    + "\" has been successfully registered with " + savedComplaint.getPriority() + " priority.",
+                    + "\" has been registered with " + savedComplaint.getPriority()
+                    + " priority (Resolution SLA: " + slaHours + " hours).",
                     "received"
             );
         }
@@ -581,5 +599,137 @@ public class ComplaintService {
                 .replaceAll("[^a-z0-9\\s]", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
+    }
+
+    // =========================================================
+    // SLA & ESCALATION GOVERNANCE
+    // =========================================================
+
+    /**
+     * Retrieves all complaints escalated to the Higher Authority.
+     * Automatically triggers a scan of breached deadlines before returning.
+     */
+    public List<Complaint> getEscalatedComplaints() {
+        checkAndAutoEscalateComplaints();
+        return complaintRepository.findAllEscalatedSorted();
+    }
+
+    /**
+     * Manually routes/escalates a complaint to the Higher Authority.
+     * Can be invoked by Department Officers who cannot resolve the issue at their level.
+     */
+    public Complaint escalateComplaint(Long complaintId, String reason, String officerName) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new IllegalArgumentException("Complaint not found with ID: " + complaintId));
+
+        complaint.setIsEscalated(true);
+        complaint.setEscalationLevel("HIGHER_AUTHORITY");
+        complaint.setEscalatedAt(LocalDateTime.now());
+        complaint.setEscalatedTo("Higher Municipal Authority");
+
+        String formattedReason = (reason != null && !reason.isBlank())
+                ? reason.trim()
+                : "Escalated by Department Officer for higher-level intervention.";
+
+        if (officerName != null && !officerName.isBlank()) {
+            formattedReason = "[" + officerName.trim() + "] " + formattedReason;
+        }
+
+        complaint.setEscalationReason(formattedReason);
+        Complaint saved = complaintRepository.save(complaint);
+
+        // Notify Citizen about escalation to Higher Authority
+        if (saved.getCitizenId() != null) {
+            notificationService.createNotification(
+                    saved.getCitizenId(),
+                    saved.getId(),
+                    saved.getTitle(),
+                    "Escalated to Higher Authority",
+                    "Your complaint has been escalated to the Higher Municipal Authority for priority resolution. Reason: " + formattedReason,
+                    "escalated"
+            );
+        }
+
+        log.info("🚨 Complaint #{} manually escalated to Higher Authority by '{}'. Reason: {}",
+                complaintId, officerName, formattedReason);
+
+        return saved;
+    }
+
+    /**
+     * Scheduled Background Task: Runs every 60 seconds.
+     * Automatically checks all active complaints against their priority-based SLA deadlines.
+     * If now > slaDeadline, automatically routes the complaint to the Higher Authority.
+     */
+    @Scheduled(fixedRate = 60000)
+    public int checkAndAutoEscalateComplaints() {
+        List<Complaint> breached = complaintRepository.findBreachedUnescalatedComplaints();
+        if (breached.isEmpty()) {
+            return 0;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        for (Complaint c : breached) {
+            c.setIsEscalated(true);
+            c.setEscalationLevel("HIGHER_AUTHORITY");
+            c.setEscalatedAt(now);
+            c.setEscalatedTo("Higher Municipal Authority");
+
+            int hours = c.getSlaHours() != null ? c.getSlaHours() : Complaint.calculateSlaHours(c.getPriority());
+            String autoReason = String.format("SLA BREACH: Auto-escalated to Higher Authority because %s priority resolution SLA (%dh) expired.",
+                    c.getPriority() != null ? c.getPriority() : "Standard", hours);
+            c.setEscalationReason(autoReason);
+
+            if (c.getCitizenId() != null) {
+                notificationService.createNotification(
+                        c.getCitizenId(),
+                        c.getId(),
+                        c.getTitle(),
+                        "SLA Breached - Auto-Escalated",
+                        "Your complaint has exceeded the " + hours + "-hour resolution SLA and has been automatically escalated to the Higher Authority.",
+                        "escalated"
+                );
+            }
+        }
+
+        complaintRepository.saveAll(breached);
+        log.warn("⚠️ SLA Monitor: Automatically escalated {} overdue complaints to Higher Authority.", breached.size());
+        return breached.size();
+    }
+
+    /**
+     * Provides SLA & Escalation Governance Statistics.
+     */
+    public Map<String, Object> getSlaStats() {
+        checkAndAutoEscalateComplaints();
+        List<Complaint> all = complaintRepository.findAll();
+        long total = all.size();
+        long escalated = all.stream().filter(c -> Boolean.TRUE.equals(c.getIsEscalated())).count();
+        long resolved = all.stream().filter(c -> "RESOLVED".equalsIgnoreCase(c.getStatus())).count();
+        long breached = all.stream().filter(c -> {
+            if ("RESOLVED".equalsIgnoreCase(c.getStatus()) || "REJECTED".equalsIgnoreCase(c.getStatus())) {
+                return false;
+            }
+            return c.getSlaDeadline() != null && LocalDateTime.now().isAfter(c.getSlaDeadline());
+        }).count();
+
+        long withinSla = all.stream().filter(c -> {
+            if ("RESOLVED".equalsIgnoreCase(c.getStatus())) {
+                return true;
+            }
+            return c.getSlaDeadline() != null && LocalDateTime.now().isBefore(c.getSlaDeadline());
+        }).count();
+
+        double complianceRate = total > 0 ? ((double) withinSla / total) * 100 : 100.0;
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("totalComplaints", total);
+        stats.put("escalatedComplaints", escalated);
+        stats.put("breachedComplaints", breached);
+        stats.put("withinSlaComplaints", withinSla);
+        stats.put("resolvedComplaints", resolved);
+        stats.put("slaComplianceRate", Math.round(complianceRate * 10.0) / 10.0);
+
+        return stats;
     }
 }

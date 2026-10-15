@@ -1,6 +1,7 @@
 package com.civicpulse.backend.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -35,6 +36,32 @@ public class ComplaintController {
         return ResponseEntity.ok(
                 complaintService.getPriorityDistribution()
         );
+    }
+
+    // Get all complaints escalated to Higher Authority
+    @GetMapping("/escalated")
+    public ResponseEntity<List<Complaint>> getEscalatedComplaints() {
+        return ResponseEntity.ok(complaintService.getEscalatedComplaints());
+    }
+
+    // Escalate a complaint to Higher Authority (Manual Officer escalation or directive)
+    @PostMapping("/{id}/escalate")
+    public ResponseEntity<Complaint> escalateComplaint(
+            @PathVariable String id,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        String reason = body != null ? body.get("reason") : "Escalated to Higher Authority";
+        String officerName = body != null ? body.get("officerName") : "Department Officer";
+        return ResponseEntity.ok(complaintService.escalateComplaint(complaintId, reason, officerName));
+    }
+
+    // Get SLA governance stats
+    @GetMapping("/sla-stats")
+    public ResponseEntity<java.util.Map<String, Object>> getSlaStats() {
+        return ResponseEntity.ok(complaintService.getSlaStats());
     }
 
     // Create a complaint
@@ -253,5 +280,16 @@ public class ComplaintController {
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    // Trigger an immediate scan and escalation of overdue complaints
+    @PostMapping("/trigger-sla-check")
+    public ResponseEntity<Map<String, Object>> triggerSlaCheck() {
+        int escalatedCount = complaintService.checkAndAutoEscalateComplaints();
+        return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "escalatedCount", escalatedCount,
+                "message", "SLA check completed. Overdue complaints escalated."
+        ));
     }
 }

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../../components/AdminNavbar";
 import "../../styles/StatusUpdates.css";
 
 const StatusUpdates = () => {
+  const navigate = useNavigate();
   const [complaintId, setComplaintId] = useState("");
   const [status, setStatus] = useState("IN_PROGRESS");
   const [comment, setComment] = useState("");
@@ -11,6 +13,13 @@ const StatusUpdates = () => {
   const [loading, setLoading] = useState(false);
   const [previewComplaint, setPreviewComplaint] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+      navigate("/portal");
+    }
+  }, [navigate]);
 
   // Helper to extract numeric ID (e.g., "CMP-1001", "#1001" => "1001")
   const getNumericId = (input) => {
@@ -164,6 +173,15 @@ const StatusUpdates = () => {
                 <div style={{ fontSize: "12.5px", color: "#475569", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginTop: "6px" }}>
                   <div><strong>Category:</strong> {previewComplaint.category}</div>
                   <div><strong>Location:</strong> {previewComplaint.location}</div>
+                  <div><strong>Priority:</strong> {previewComplaint.priority} ({previewComplaint.slaHours || 48}h SLA)</div>
+                  <div>
+                    <strong>Governance:</strong>{" "}
+                    {previewComplaint.isEscalated ? (
+                      <span style={{ color: "#b91c1c", fontWeight: "700" }}>🚨 Escalated</span>
+                    ) : (
+                      <span style={{ color: "#15803d", fontWeight: "600" }}>Standard Department Queue</span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

@@ -10,8 +10,8 @@ const RegisterOfficerModal = ({ isOpen, onClose, onOfficerAdded }) => {
     name: "",
     email: "",
     password: "",
-    departmentName: "Public Works Department",
-    departmentCode: "PWD",
+    departmentName: "Emergency & Public Safety Department",
+    departmentCode: "ED",
     phone: "",
   });
 
@@ -20,13 +20,15 @@ const RegisterOfficerModal = ({ isOpen, onClose, onOfficerAdded }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const departmentOptions = [
-    { name: "Public Works Department", code: "PWD" },
-    { name: "Water Supply & Sewerage", code: "WATER" },
-    { name: "Public Health & Sanitation", code: "SANITATION" },
-    { name: "Electricity & Lighting", code: "ELEC" },
-    { name: "Environment & Parks", code: "PARKS" },
-    { name: "Town Planning & Housing", code: "HOUSING" },
-    { name: "General Administration", code: "ADMIN" },
+    { name: "Emergency & Public Safety Department", code: "ED" },
+    { name: "Electricity & Street Lighting", code: "ESL" },
+    { name: "Public Works & Infrastructure", code: "PWI" },
+    { name: "Water Supply & Sewerage", code: "WSS" },
+    { name: "Sanitation & Waste Management", code: "SWM" },
+    { name: "Public Health & Hygiene", code: "PHH" },
+    { name: "Environment & Parks", code: "PE" },
+    { name: "Traffic & Transportation", code: "TT" },
+    { name: "General Administration Department", code: "GAD" },
   ];
 
   const fetchOfficers = async () => {
@@ -130,8 +132,8 @@ const RegisterOfficerModal = ({ isOpen, onClose, onOfficerAdded }) => {
         name: "",
         email: "",
         password: "",
-        departmentName: "Public Works Department",
-        departmentCode: "PWD",
+        departmentName: "Emergency & Public Safety Department",
+        departmentCode: "ED",
         phone: "",
       });
 

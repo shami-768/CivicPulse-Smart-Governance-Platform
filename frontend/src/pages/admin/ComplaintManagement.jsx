@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../../components/AdminNavbar";
 import "../../styles/ComplaintManagement.css";
 
@@ -78,6 +79,7 @@ const INITIAL_MOCK_COMPLAINTS = [
 ];
 
 const ComplaintManagement = () => {
+  const navigate = useNavigate();
   const [complaints, setComplaints] = useState(INITIAL_MOCK_COMPLAINTS);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -112,8 +114,13 @@ const ComplaintManagement = () => {
   };
 
   useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+      navigate("/portal");
+      return;
+    }
     fetchComplaints();
-  }, []);
+  }, [navigate]);
 
   const handleRecalculateAll = async () => {
     setRecalculating(true);
@@ -283,6 +290,7 @@ const ComplaintManagement = () => {
                   <th>Priority & Score</th>
                   <th>Category</th>
                   <th>Location</th>
+                  <th>Resolution SLA</th>
                   <th>Date</th>
                   <th>Status</th>
                   <th>Action</th>
@@ -335,6 +343,19 @@ const ComplaintManagement = () => {
                         ) : null}
                       </td>
                       <td>
+                        <strong style={{ color: "#0284c7", fontSize: "13px" }}>
+                          {complaint.slaHours
+                            ? `${complaint.slaHours}h Target`
+                            : String(complaint.priority).toUpperCase() === "CRITICAL"
+                            ? "12h Target"
+                            : String(complaint.priority).toUpperCase() === "HIGH"
+                            ? "24h Target"
+                            : String(complaint.priority).toUpperCase() === "MEDIUM"
+                            ? "48h Target"
+                            : "72h Target"}
+                        </strong>
+                      </td>
+                      <td>
                         {complaint.createdAt
                           ? new Date(complaint.createdAt).toLocaleDateString()
                           : "Recent"}
@@ -356,7 +377,7 @@ const ComplaintManagement = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="no-results">
+                    <td colSpan="8" className="no-results">
                       No complaints found matching criteria.
                     </td>
                   </tr>
@@ -446,10 +467,27 @@ const ComplaintManagement = () => {
               flexDirection: "column",
               gap: "18px"
             }}>
-              {/* Priority Level */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                <span style={{ fontWeight: "600", fontSize: "14px", color: "#334155" }}>Priority Classification:</span>
-                {getPriorityBadge(selectedComplaint.priority, selectedComplaint.priorityScore)}
+              {/* Priority Level & SLA Target */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: "600", fontSize: "14px", color: "#334155" }}>Priority Classification:</span>
+                  {getPriorityBadge(selectedComplaint.priority, selectedComplaint.priorityScore)}
+                </div>
+
+                <div style={{ background: "#e0f2fe", padding: "6px 12px", borderRadius: "8px", border: "1px solid #bae6fd", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ fontSize: "12px", color: "#0369a1", fontWeight: "600" }}>⏱ Resolution SLA:</span>
+                  <strong style={{ color: "#0284c7", fontSize: "13px" }}>
+                    {selectedComplaint.slaHours
+                      ? `${selectedComplaint.slaHours} Hours Target`
+                      : String(selectedComplaint.priority).toUpperCase() === "CRITICAL"
+                      ? "12 Hours Target"
+                      : String(selectedComplaint.priority).toUpperCase() === "HIGH"
+                      ? "24 Hours Target"
+                      : String(selectedComplaint.priority).toUpperCase() === "MEDIUM"
+                      ? "48 Hours Target"
+                      : "72 Hours Target"}
+                  </strong>
+                </div>
               </div>
 
               {/* Automated Priority Reason */}

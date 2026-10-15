@@ -49,15 +49,52 @@ public class Complaint {
 
     private LocalDateTime createdAt;
 
+    // SLA & Escalation Governance Fields (Benchmarked from Municipal Smart City Charters)
+    private Integer slaHours = 48; // Default 48h (HIGH: 24h, MEDIUM: 48h, LOW: 72h)
+    private LocalDateTime slaDeadline;
+    private Boolean isEscalated = false;
+    private LocalDateTime escalatedAt;
+    private String escalationLevel = "LEVEL_1"; // "LEVEL_1" -> "HIGHER_AUTHORITY"
+
+    @Column(length = 1000)
+    private String escalationReason;
+    private String escalatedTo = "Higher Municipal Authority";
+
     // Default constructor
     public Complaint() {
         this.createdAt = LocalDateTime.now();
+        this.slaHours = calculateSlaHours(this.priority);
+        this.slaDeadline = this.createdAt.plusHours(this.slaHours);
     }
 
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
+        }
+        if (this.slaHours == null) {
+            this.slaHours = calculateSlaHours(this.priority);
+        }
+        if (this.slaDeadline == null && this.createdAt != null) {
+            this.slaDeadline = this.createdAt.plusHours(this.slaHours);
+        }
+        if (this.isEscalated == null) {
+            this.isEscalated = false;
+        }
+        if (this.escalationLevel == null) {
+            this.escalationLevel = "LEVEL_1";
+        }
+    }
+
+    public static int calculateSlaHours(String priority) {
+        if (priority == null) return 48;
+        String p = priority.trim().toUpperCase();
+        if (p.equals("CRITICAL") || p.equals("HIGH")) {
+            return 24; // Research Benchmark: Urgent/Hazard issues resolve in 24h
+        } else if (p.equals("MEDIUM")) {
+            return 48; // Moderate issues resolve in 48h (2 days)
+        } else {
+            return 72; // Minor/Routine issues resolve in 72h (3 days)
         }
     }
 
@@ -193,5 +230,54 @@ public class Complaint {
     }
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Integer getSlaHours() {
+        return slaHours;
+    }
+    public void setSlaHours(Integer slaHours) {
+        this.slaHours = slaHours;
+    }
+
+    public LocalDateTime getSlaDeadline() {
+        return slaDeadline;
+    }
+    public void setSlaDeadline(LocalDateTime slaDeadline) {
+        this.slaDeadline = slaDeadline;
+    }
+
+    public Boolean getIsEscalated() {
+        return isEscalated != null && isEscalated;
+    }
+    public void setIsEscalated(Boolean isEscalated) {
+        this.isEscalated = isEscalated;
+    }
+
+    public LocalDateTime getEscalatedAt() {
+        return escalatedAt;
+    }
+    public void setEscalatedAt(LocalDateTime escalatedAt) {
+        this.escalatedAt = escalatedAt;
+    }
+
+    public String getEscalationLevel() {
+        return escalationLevel;
+    }
+    public void setEscalationLevel(String escalationLevel) {
+        this.escalationLevel = escalationLevel;
+    }
+
+    public String getEscalationReason() {
+        return escalationReason;
+    }
+    public void setEscalationReason(String escalationReason) {
+        this.escalationReason = escalationReason;
+    }
+
+    public String getEscalatedTo() {
+        return escalatedTo;
+    }
+    public void setEscalatedTo(String escalatedTo) {
+        this.escalatedTo = escalatedTo;
     }
 }

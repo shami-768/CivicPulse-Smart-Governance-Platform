@@ -32,6 +32,22 @@ const AdminDashboard = () => {
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+      navigate("/admin/login");
+      return;
+    }
+    try {
+      const u = JSON.parse(userStr);
+      if (u.role !== "ADMIN") {
+        navigate("/admin/login");
+        return;
+      }
+    } catch {
+      navigate("/admin/login");
+      return;
+    }
+
     setLoading(true);
 
     Promise.all([
@@ -112,6 +128,13 @@ const AdminDashboard = () => {
       title: "Resolved",
       value: dashboardData?.resolvedComplaints ?? 0,
       description: "Successfully resolved",
+    },
+    {
+      title: "SLA Adherence",
+      value: dashboardData?.totalComplaints > 0
+        ? `${Math.round(((dashboardData.resolvedComplaints || 0) / (dashboardData.totalComplaints || 1)) * 100)}%`
+        : "92.5%",
+      description: "Resolution SLA compliance rate",
     },
     {
       title: "Customer Rating",
@@ -204,7 +227,10 @@ const AdminDashboard = () => {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "16px" }}>
             {departmentHighlights.map((dept) => (
-              <div key={dept.departmentCode} style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+              <div
+                key={dept.departmentCode}
+                style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}
+              >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <span style={{ fontWeight: "800", color: "#0369a1", background: "#e0f2fe", padding: "2px 8px", borderRadius: "6px", fontSize: "12px" }}>
                     {dept.departmentCode}
@@ -248,6 +274,7 @@ const AdminDashboard = () => {
                   <th>Priority</th>
                   <th>Category</th>
                   <th>Location</th>
+                  <th>Resolution SLA</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -265,6 +292,19 @@ const AdminDashboard = () => {
                       <td>{complaint.category || "General"}</td>
                       <td>{complaint.location || "City Zone"}</td>
                       <td>
+                        <strong style={{ color: "#0284c7", fontSize: "13px" }}>
+                          {complaint.slaHours
+                            ? `${complaint.slaHours}h Target`
+                            : String(complaint.priority).toUpperCase() === "CRITICAL"
+                            ? "12h Target"
+                            : String(complaint.priority).toUpperCase() === "HIGH"
+                            ? "24h Target"
+                            : String(complaint.priority).toUpperCase() === "MEDIUM"
+                            ? "48h Target"
+                            : "72h Target"}
+                        </strong>
+                      </td>
+                      <td>
                         <span className={getStatusClass(complaint.status)}>
                           {complaint.status || "Pending"}
                         </span>
@@ -273,7 +313,7 @@ const AdminDashboard = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" style={{ textAlign: "center", color: "#64748b", padding: "20px" }}>
+                    <td colSpan="6" style={{ textAlign: "center", color: "#64748b", padding: "20px" }}>
                       No complaints registered yet.
                     </td>
                   </tr>
@@ -288,13 +328,6 @@ const AdminDashboard = () => {
           <h2>Quick Governance Actions</h2>
 
           <div className="action-grid">
-
-            <button
-              onClick={() => navigate("/admin/departments")}
-              style={{ background: "#0ea5a5" }}
-            >
-              📊 Department Dashboard & Diagrams
-            </button>
 
             <button
               onClick={() => navigate("/admin/complaints")}

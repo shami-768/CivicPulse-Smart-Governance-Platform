@@ -39,29 +39,7 @@ public class AdminInitializer {
                 userRepository.save(admin);
             }
 
-            // 2. Create Default Citizen User in 'users' and 'citizens' table
-            String citizenEmail = "citizen@civicpulse.com";
-            String encodedCitizenPassword = passwordEncoder.encode("Citizen@123");
-            if (!userRepository.existsByEmail(citizenEmail)) {
-                User citizenUser = new User();
-                citizenUser.setName("John Citizen");
-                citizenUser.setEmail(citizenEmail);
-                citizenUser.setPassword(encodedCitizenPassword);
-                citizenUser.setRole("CITIZEN");
-                User savedCitizenUser = userRepository.save(citizenUser);
-
-                Citizen citizenRecord = new Citizen();
-                citizenRecord.setUserId(savedCitizenUser.getId());
-                citizenRecord.setName("John Citizen");
-                citizenRecord.setEmail(citizenEmail);
-                citizenRecord.setPassword(encodedCitizenPassword);
-                citizenRecord.setPhone("9876543210");
-                citizenRecord.setAddress("Sector 15, Civic City");
-                citizenRecord.setRole("CITIZEN");
-                citizenRepository.save(citizenRecord);
-            }
-
-            // 3. Seed Canonical Departments & Officers
+            // 2. Seed Canonical Departments & Officers
             String encodedOfficerPassword = passwordEncoder.encode("Officer@123");
 
             for (CanonicalDepartment canonical : CanonicalDepartment.values()) {

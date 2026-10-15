@@ -1,12 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../../components/AdminNavbar";
 import "../../styles/ComplaintTracking.css";
 
 const ComplaintTracking = () => {
+  const navigate = useNavigate();
   const [searchId, setSearchId] = useState("");
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+      navigate("/portal");
+    }
+  }, [navigate]);
 
   // Canonical status normalizer
   const normalizeStatus = (raw) => {
@@ -154,7 +163,25 @@ const ComplaintTracking = () => {
 
                 <div>
                   <span>Citizen ID</span>
-                  <strong>{complaint.citizenId}</strong>
+                  <strong>{complaint.citizenId || "Anonymous"}</strong>
+                </div>
+
+                <div>
+                  <span>Target SLA Window</span>
+                  <strong style={{ color: "#0284c7" }}>
+                    {complaint.slaHours || (String(complaint.priority).toUpperCase() === "HIGH" || String(complaint.priority).toUpperCase() === "CRITICAL" ? 24 : String(complaint.priority).toUpperCase() === "MEDIUM" ? 48 : 72)} Hours
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Governance Hierarchy</span>
+                  <strong>
+                    {complaint.isEscalated ? (
+                      <span style={{ color: "#dc2626", fontWeight: "700" }}>🚨 Higher Municipal Authority</span>
+                    ) : (
+                      <span style={{ color: "#16a34a" }}>Level 1 (Department Officer)</span>
+                    )}
+                  </strong>
                 </div>
               </div>
 

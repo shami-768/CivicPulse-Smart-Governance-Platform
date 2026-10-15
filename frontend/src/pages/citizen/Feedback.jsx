@@ -12,23 +12,25 @@ const ratingLabels = {
 };
 
 const categories = [
-  "General Experience",
-  "Road & Infrastructure",
-  "Water Supply",
-  "Sanitation & Garbage",
-  "Electricity Service",
-  "Portal Usability",
-  "Officer Responsiveness",
+  "Emergency & Public Safety Department",
+  "Electricity & Street Lighting",
+  "Public Works & Infrastructure",
+  "Water Supply & Sewerage",
+  "Sanitation & Waste Management",
+  "Public Health & Hygiene",
+  "Environment & Parks",
+  "Traffic & Transportation",
+  "General Administration Department",
 ];
 
 function Feedback() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [stats, setStats] = useState({
-    averageRating: 4.8,
-    totalFeedbacks: 12,
-    fiveStarCount: 9,
-    fourStarCount: 2,
-    threeStarCount: 1,
+    averageRating: 0,
+    totalFeedbacks: 0,
+    fiveStarCount: 0,
+    fourStarCount: 0,
+    threeStarCount: 0,
     twoStarCount: 0,
     oneStarCount: 0,
   });
@@ -40,7 +42,7 @@ function Feedback() {
   const [formData, setFormData] = useState({
     citizenName: "",
     citizenEmail: "",
-    category: "General Experience",
+    category: "Emergency & Public Safety Department",
     rating: 5,
     comment: "",
     complaintId: "",
@@ -78,35 +80,9 @@ function Feedback() {
 
       if (feedRes && feedRes.ok) {
         const data = await feedRes.json();
-        setFeedbacks(data);
+        setFeedbacks(Array.isArray(data) ? data : []);
       } else {
-        // Fallback default sample feedbacks if server isn't populated yet
-        setFeedbacks([
-          {
-            id: 1,
-            citizenName: "Ananya Sharma",
-            category: "Sanitation & Garbage",
-            rating: 5,
-            comment: "Extremely fast response! The sanitation crew cleared the waste pile within 24 hours of reporting. Kudos to CivicPulse team!",
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 2,
-            citizenName: "Rahul Verma",
-            category: "Portal Usability",
-            rating: 5,
-            comment: "Very clean UI and easy complaint tracking mechanism. Keep up the great work!",
-            createdAt: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            id: 3,
-            citizenName: "Priya Patel",
-            category: "Road & Infrastructure",
-            rating: 4,
-            comment: "The pothole issue was repaired nicely. Slightly took 3 days instead of 2, but quality work overall.",
-            createdAt: new Date(Date.now() - 172800000).toISOString(),
-          },
-        ]);
+        setFeedbacks([]);
       }
 
       if (statsRes && statsRes.ok) {
