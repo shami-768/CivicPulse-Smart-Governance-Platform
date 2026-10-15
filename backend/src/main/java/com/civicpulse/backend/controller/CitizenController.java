@@ -20,7 +20,8 @@ import com.civicpulse.backend.service.CitizenService;
 @RestController
 @RequestMapping("/api/citizens")
 @CrossOrigin(origins = "*")
-public class CitizenController {
+public class
+CitizenController {
 
     private final CitizenService citizenService;
 
