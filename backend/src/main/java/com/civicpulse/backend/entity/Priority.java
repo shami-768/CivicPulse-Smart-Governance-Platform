@@ -6,9 +6,9 @@ public enum Priority {
     LOW;
 
     public static Priority fromScore(int score) {
-        if (score >= 80) {
+        if (score >= 75) {
             return HIGH;
-        } else if (score >= 50) {
+        } else if (score >= 30) {
             return MEDIUM;
         } else {
             return LOW;
