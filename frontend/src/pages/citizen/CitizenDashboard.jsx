@@ -105,20 +105,50 @@ function CitizenDashboard() {
     ];
   }, [complaints]);
 
+  // Canonical status normalizer
+  const normalizeStatus = (raw) => {
+    if (!raw) return "PENDING";
+    const s = String(raw).trim().toUpperCase().replace(/[- ]/g, "_");
+    if (s.includes("RESOLV") || s === "CLOSED") return "RESOLVED";
+    if (s.includes("PROG") || s.includes("ASSIGN")) return "IN_PROGRESS";
+    if (s.includes("REJECT")) return "REJECTED";
+    return "PENDING";
+  };
+
+  const formatStatusDisplay = (raw) => {
+    const norm = normalizeStatus(raw);
+    if (norm === "IN_PROGRESS") return "In Progress";
+    if (norm === "RESOLVED") return "Resolved";
+    if (norm === "REJECTED") return "Rejected";
+    return "Pending";
+  };
+
+  const getCleanNumericId = (raw) => {
+    if (!raw) return "";
+    return String(raw).replace(/[^0-9]/g, "");
+  };
+
   // Filter complaints
   const filteredComplaints = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const cleanDigits = term.replace(/[^0-9]/g, "");
+
     return complaints.filter((complaint) => {
+      const cid = String(complaint.id || "").toLowerCase();
+      const formattedCmp = `cmp-${cid}`;
+
       const matchesSearch =
-        complaint.title
-          ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
-        complaint.location
-          ?.toLowerCase()
-          .includes(search.toLowerCase());
+        !term ||
+        cid.includes(term) ||
+        formattedCmp.includes(term) ||
+        (cleanDigits && cid === cleanDigits) ||
+        complaint.title?.toLowerCase().includes(term) ||
+        complaint.location?.toLowerCase().includes(term) ||
+        complaint.category?.toLowerCase().includes(term);
 
       const matchesStatus =
         statusFilter === "ALL" ||
-        complaint.status === statusFilter;
+        normalizeStatus(complaint.status) === normalizeStatus(statusFilter);
 
       const matchesCategory =
         categoryFilter === "ALL" ||
@@ -143,22 +173,45 @@ function CitizenDashboard() {
     priorityFilter,
   ]);
 
+  // Live synchronizing stats: dynamically calculated from complaints
+  const displayStats = useMemo(() => {
+    if (complaints && complaints.length > 0) {
+      const pending = complaints.filter(
+        (c) => normalizeStatus(c.status) === "PENDING"
+      ).length;
+      const inProgress = complaints.filter(
+        (c) => normalizeStatus(c.status) === "IN_PROGRESS"
+      ).length;
+      const resolved = complaints.filter(
+        (c) => normalizeStatus(c.status) === "RESOLVED"
+      ).length;
+
+      return {
+        totalComplaints: complaints.length,
+        pendingComplaints: pending,
+        inProgressComplaints: inProgress,
+        resolvedComplaints: resolved,
+      };
+    }
+    return stats;
+  }, [stats, complaints]);
+
   // Chart calculations
   const statusCounts = {
     PENDING: complaints.filter(
-      (c) => c.status === "PENDING"
+      (c) => normalizeStatus(c.status) === "PENDING"
     ).length,
 
     IN_PROGRESS: complaints.filter(
-      (c) => c.status === "IN_PROGRESS"
+      (c) => normalizeStatus(c.status) === "IN_PROGRESS"
     ).length,
 
     RESOLVED: complaints.filter(
-      (c) => c.status === "RESOLVED"
+      (c) => normalizeStatus(c.status) === "RESOLVED"
     ).length,
 
     REJECTED: complaints.filter(
-      (c) => c.status === "REJECTED"
+      (c) => normalizeStatus(c.status) === "REJECTED"
     ).length,
   };
 
@@ -186,7 +239,8 @@ function CitizenDashboard() {
   });
 
   const getStatusClass = (status) => {
-    switch (status) {
+    const norm = normalizeStatus(status);
+    switch (norm) {
       case "PENDING":
         return "status-pending";
 

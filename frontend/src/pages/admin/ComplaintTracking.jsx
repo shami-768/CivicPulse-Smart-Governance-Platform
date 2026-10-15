@@ -8,16 +8,43 @@ const ComplaintTracking = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Canonical status normalizer
+  const normalizeStatus = (raw) => {
+    if (!raw) return "PENDING";
+    const s = String(raw).trim().toUpperCase().replace(/[- ]/g, "_");
+    if (s.includes("RESOLV") || s === "CLOSED") return "RESOLVED";
+    if (s.includes("PROG") || s.includes("ASSIGN")) return "IN_PROGRESS";
+    if (s.includes("REJECT")) return "REJECTED";
+    return "PENDING";
+  };
+
+  const formatStatusDisplay = (raw) => {
+    const norm = normalizeStatus(raw);
+    if (norm === "IN_PROGRESS") return "In Progress";
+    if (norm === "RESOLVED") return "Resolved";
+    if (norm === "REJECTED") return "Rejected";
+    return "Pending";
+  };
+
+  // Helper to extract clean numeric digits
+  const getCleanNumericId = (raw) => {
+    if (!raw) return "";
+    return String(raw).replace(/[^0-9]/g, "");
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
 
-    const id = searchId.trim();
+    const rawInput = searchId.trim();
 
-    if (!id) {
-      setError("Please enter a Complaint ID.");
+    if (!rawInput) {
+      setError("Please enter a Complaint ID (e.g. CMP-1001 or 1001).");
       setComplaint(null);
       return;
     }
+
+    const cleanNumeric = getCleanNumericId(rawInput);
+    const searchTarget = cleanNumeric || rawInput.replace(/^#+/, "");
 
     setLoading(true);
     setError("");
@@ -25,24 +52,24 @@ const ComplaintTracking = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8081/api/complaints/${id}`
+        `http://localhost:8081/api/complaints/${encodeURIComponent(searchTarget)}`
       );
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error("Complaint not found.");
+          throw new Error(`Complaint ${rawInput} not found.`);
         }
 
-        throw new Error("Failed to fetch complaint.");
+        throw new Error("Failed to fetch complaint from server.");
       }
 
       const data = await response.json();
       setComplaint(data);
     } catch (err) {
       console.error(err);
-      // Fallback demonstration complaint for tracking
+      // Fallback demonstration complaint for tracking with clean display
       setComplaint({
-        id: id || "CMP-1001",
+        id: cleanNumeric || "1001",
         category: "Sanitation & Waste Management",
         location: "Sector 18, Noida",
         priority: "High",
@@ -59,13 +86,15 @@ const ComplaintTracking = () => {
   const getStepClass = (step) => {
     if (!complaint) return "";
 
+    const norm = normalizeStatus(complaint.status);
     const statusOrder = {
-      Pending: 1,
-      "In Progress": 2,
-      Resolved: 3,
+      PENDING: 1,
+      IN_PROGRESS: 2,
+      RESOLVED: 3,
+      REJECTED: 1,
     };
 
-    const currentStep = statusOrder[complaint.status] || 1;
+    const currentStep = statusOrder[norm] || 1;
 
     return step <= currentStep ? "completed" : "";
   };
@@ -98,7 +127,12 @@ const ComplaintTracking = () => {
         {complaint && (
           <div className="tracking-card">
             <div className="complaint-info">
-              <h2>Complaint #{complaint.id}</h2>
+              <h2>
+                Complaint #{getCleanNumericId(complaint.id) || complaint.id}{" "}
+                <span style={{ fontSize: "16px", color: "#64748b", fontWeight: "normal" }}>
+                  (CMP-{getCleanNumericId(complaint.id) || complaint.id})
+                </span>
+              </h2>
 
               <div className="info-grid">
                 <div>
@@ -197,7 +231,7 @@ const ComplaintTracking = () => {
 
             <div className="current-status">
               <span>Current Status</span>
-              <strong>{complaint.status}</strong>
+              <strong>{formatStatusDisplay(complaint.status)}</strong>
             </div>
 
             <div className="timeline">

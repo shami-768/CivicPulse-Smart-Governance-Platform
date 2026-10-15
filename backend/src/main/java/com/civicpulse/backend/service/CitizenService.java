@@ -63,7 +63,7 @@ public class CitizenService {
         // Pending complaints
         long pendingComplaints =
                 complaintRepository
-                        .findByCitizenIdAndStatus(
+                        .findByCitizenIdAndNormalizedStatus(
                                 citizenId,
                                 "PENDING"
                         )
@@ -72,7 +72,7 @@ public class CitizenService {
         // In-progress complaints
         long inProgressComplaints =
                 complaintRepository
-                        .findByCitizenIdAndStatus(
+                        .findByCitizenIdAndNormalizedStatus(
                                 citizenId,
                                 "IN_PROGRESS"
                         )
@@ -81,7 +81,7 @@ public class CitizenService {
         // Resolved complaints
         long resolvedComplaints =
                 complaintRepository
-                        .findByCitizenIdAndStatus(
+                        .findByCitizenIdAndNormalizedStatus(
                                 citizenId,
                                 "RESOLVED"
                         )

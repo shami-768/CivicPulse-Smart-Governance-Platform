@@ -19,6 +19,19 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     List<Complaint> findByCitizenIdAndStatus(Long citizenId, String status);
 
+    @Query("""
+        SELECT c FROM Complaint c
+        WHERE c.citizenId = :citizenId
+        AND UPPER(REPLACE(c.status, ' ', '_')) = UPPER(REPLACE(:status, ' ', '_'))
+    """)
+    List<Complaint> findByCitizenIdAndNormalizedStatus(Long citizenId, String status);
+
+    @Query("""
+        SELECT COUNT(c) FROM Complaint c
+        WHERE UPPER(REPLACE(c.status, ' ', '_')) = UPPER(REPLACE(:status, ' ', '_'))
+    """)
+    long countByNormalizedStatus(String status);
+
     long countByCategoryIgnoreCaseAndLocationIgnoreCase(String category, String location);
     List<Complaint> findByCategoryIgnoreCaseAndLocationIgnoreCase(String category,String location);
     

@@ -43,9 +43,7 @@ public class ComplaintService {
             throw new IllegalArgumentException("Complaint category is required.");
         }
 
-        if (complaint.getStatus() == null || complaint.getStatus().isBlank()) {
-            complaint.setStatus("PENDING");
-        }
+        complaint.setStatus(normalizeStatus(complaint.getStatus()));
 
         // Automatically map Category -> Department (ignore any client-supplied departmentId)
         var department = complaintDepartmentService.getDepartmentForCategory(complaint.getCategory());
@@ -317,7 +315,9 @@ public class ComplaintService {
         existingComplaint.setDescription(updatedComplaint.getDescription());
         existingComplaint.setCategory(updatedComplaint.getCategory());
         existingComplaint.setLocation(updatedComplaint.getLocation());
-        existingComplaint.setStatus(updatedComplaint.getStatus());
+        if (updatedComplaint.getStatus() != null && !updatedComplaint.getStatus().isBlank()) {
+            existingComplaint.setStatus(normalizeStatus(updatedComplaint.getStatus()));
+        }
 
         if (existingComplaint.getCategory() != null && !existingComplaint.getCategory().isBlank()) {
             var department = complaintDepartmentService.getDepartmentForCategory(existingComplaint.getCategory());
@@ -364,7 +364,7 @@ public class ComplaintService {
         // Notify citizen only if status actually changed
         if (savedComplaint.getCitizenId() != null
                 && savedComplaint.getStatus() != null
-                && !savedComplaint.getStatus().equalsIgnoreCase(oldStatus)) {
+                && !sameStatus(oldStatus, savedComplaint.getStatus())) {
 
             createStatusNotification(savedComplaint);
         }
@@ -378,17 +378,18 @@ public class ComplaintService {
     public Complaint updateComplaintStatus(Long id, String status) {
 
         Complaint complaint = complaintRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Complaint not found"));
+                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + id));
 
         String oldStatus = complaint.getStatus();
+        String newStatus = normalizeStatus(status);
 
-        complaint.setStatus(status);
+        complaint.setStatus(newStatus);
 
         Complaint savedComplaint = complaintRepository.save(complaint);
 
         // Don't create duplicate notification
         if (savedComplaint.getCitizenId() != null
-                && !sameStatus(oldStatus, status)) {
+                && !sameStatus(oldStatus, newStatus)) {
 
             createStatusNotification(savedComplaint);
         }
@@ -518,7 +519,27 @@ public class ComplaintService {
             return false;
         }
 
-        return first.equalsIgnoreCase(second);
+        return normalizeStatus(first).equalsIgnoreCase(normalizeStatus(second));
+    }
+
+    public static String normalizeStatus(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "PENDING";
+        }
+        String clean = raw.trim().toUpperCase().replace("-", "_").replace(" ", "_");
+        if (clean.equals("IN_PROGRESS") || clean.equals("INPROGRESS") || clean.equals("PROGRESS")) {
+            return "IN_PROGRESS";
+        }
+        if (clean.equals("RESOLVED") || clean.equals("RESOLVE") || clean.equals("DONE")) {
+            return "RESOLVED";
+        }
+        if (clean.equals("REJECTED") || clean.equals("REJECT")) {
+            return "REJECTED";
+        }
+        if (clean.equals("PENDING")) {
+            return "PENDING";
+        }
+        return clean;
     }
 
     private double calculateSimilarity(String text1, String text2) {

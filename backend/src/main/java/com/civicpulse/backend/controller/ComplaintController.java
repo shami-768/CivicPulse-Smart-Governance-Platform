@@ -47,6 +47,22 @@ public class ComplaintController {
         );
     }
 
+    // Helper to safely extract numeric ID from formats like "CMP-1001", "#1001", "1001"
+    private Long parseComplaintId(String idStr) {
+        if (idStr == null || idStr.isBlank()) {
+            return null;
+        }
+        String digits = idStr.replaceAll("[^0-9]", "");
+        if (digits.isEmpty()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(digits);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     // Get all complaints
     @GetMapping
     public ResponseEntity<List<Complaint>> getAllComplaints() {
@@ -56,44 +72,58 @@ public class ComplaintController {
         );
     }
 
-    // Get complaint by ID
+    // Get complaint by ID (supports "1001", "CMP-1001", "#1001")
     @GetMapping("/{id}")
     public ResponseEntity<Complaint> getComplaintById(
-            @PathVariable Long id) {
+            @PathVariable String id) {
 
-        return complaintService.getComplaintById(id)
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return complaintService.getComplaintById(complaintId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    // Get complaints by citizen ID
 
+    // Get complaints by citizen ID
     @GetMapping("/citizen/{citizenId}")
     public ResponseEntity<List<Complaint>> getComplaintsByCitizenId(
-            @PathVariable Long citizenId) {
+            @PathVariable String citizenId) {
+
+        Long parsedCitizenId = parseComplaintId(citizenId);
+        if (parsedCitizenId == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         return ResponseEntity.ok(
-                complaintService.getComplaintsByCitizenId(citizenId)
+                complaintService.getComplaintsByCitizenId(parsedCitizenId)
         );
     }
 
     // Get complaints by department ID
     @GetMapping("/department/{departmentId}")
     public ResponseEntity<List<Complaint>> getComplaintsByDepartmentId(
-            @PathVariable Long departmentId) {
+            @PathVariable String departmentId) {
+
+        Long parsedDeptId = parseComplaintId(departmentId);
+        if (parsedDeptId == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         return ResponseEntity.ok(
-                complaintService.getComplaintsByDepartmentId(departmentId)
+                complaintService.getComplaintsByDepartmentId(parsedDeptId)
         );
     }
 
-    // Get complaints by status
-
+    // Get complaints by status (normalized)
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Complaint>> getComplaintsByStatus(
             @PathVariable String status) {
 
         return ResponseEntity.ok(
-                complaintService.getComplaintsByStatus(status)
+                complaintService.getComplaintsByStatus(ComplaintService.normalizeStatus(status))
         );
     }
 
@@ -110,43 +140,63 @@ public class ComplaintController {
     // Update complaint
     @PutMapping("/{id}")
     public ResponseEntity<Complaint> updateComplaint(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody Complaint complaint) {
 
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok(
-                complaintService.updateComplaint(id, complaint)
+                complaintService.updateComplaint(complaintId, complaint)
         );
     }
-    // Update complaint status
 
+    // Update complaint status (supports "CMP-1001" and any status format)
     @PutMapping("/{id}/status")
     public ResponseEntity<Complaint> updateComplaintStatus(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam String status) {
 
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok(
-                complaintService.updateComplaintStatus(id, status)
+                complaintService.updateComplaintStatus(complaintId, status)
         );
     }
-    // Assign complaint to department
 
+    // Assign complaint to department
     @PutMapping("/{id}/department")
     public ResponseEntity<Complaint> assignDepartment(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestParam Long departmentId) {
 
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok(
-                complaintService.assignDepartment(id, departmentId)
+                complaintService.assignDepartment(complaintId, departmentId)
         );
     }
-    // Resolve complaint
 
+    // Resolve complaint
     @PutMapping("/{id}/resolve")
     public ResponseEntity<Complaint> resolveComplaint(
-            @PathVariable Long id) {
+            @PathVariable String id) {
+
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         return ResponseEntity.ok(
-                complaintService.resolveComplaint(id)
+                complaintService.resolveComplaint(complaintId)
         );
     }
 
@@ -160,9 +210,14 @@ public class ComplaintController {
 
     // Recalculate priority for a single complaint
     @PutMapping("/{id}/recalculate-priority")
-    public ResponseEntity<Complaint> recalculatePriority(@PathVariable Long id) {
+    public ResponseEntity<Complaint> recalculatePriority(@PathVariable String id) {
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok(
-                complaintService.recalculatePriority(id)
+                complaintService.recalculatePriority(complaintId)
         );
     }
 
@@ -176,8 +231,13 @@ public class ComplaintController {
 
     // Get complaint priority breakdown detail
     @GetMapping("/{id}/priority-breakdown")
-    public ResponseEntity<String> getPriorityBreakdown(@PathVariable Long id) {
-        return complaintService.getComplaintById(id)
+    public ResponseEntity<String> getPriorityBreakdown(@PathVariable String id) {
+        Long complaintId = parseComplaintId(id);
+        if (complaintId == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return complaintService.getComplaintById(complaintId)
                 .map(c -> ResponseEntity.ok(c.getPriorityBreakdown()))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -185,9 +245,12 @@ public class ComplaintController {
     // Delete complaint
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteComplaint(
-            @PathVariable Long id) {
+            @PathVariable String id) {
 
-        complaintService.deleteComplaint(id);
+        Long complaintId = parseComplaintId(id);
+        if (complaintId != null) {
+            complaintService.deleteComplaint(complaintId);
+        }
 
         return ResponseEntity.noContent().build();
     }

@@ -31,13 +31,13 @@ public class ReportService {
         long totalComplaints = complaintRepository.count();
 
         long pendingComplaints =
-                complaintRepository.countByStatus("PENDING");
+                complaintRepository.countByNormalizedStatus("PENDING");
 
         long inProgressComplaints =
-                complaintRepository.countByStatus("IN_PROGRESS");
+                complaintRepository.countByNormalizedStatus("IN_PROGRESS");
 
         long resolvedComplaints =
-                complaintRepository.countByStatus("RESOLVED");
+                complaintRepository.countByNormalizedStatus("RESOLVED");
 
         long highPriorityComplaints =
                 complaintRepository.countByPriority("HIGH");
