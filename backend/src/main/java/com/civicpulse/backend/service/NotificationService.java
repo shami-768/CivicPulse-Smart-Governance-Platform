@@ -26,7 +26,7 @@ public class NotificationService {
     public long getUnreadCount(Long citizenId) {
 return notificationRepository.countByCitizenIdAndIsReadFalse(citizenId);    }
 
-    // Create notification
+    // Create citizen notification
     public Notification createNotification(
             Long citizenId,
             Long complaintId,
@@ -35,14 +35,77 @@ return notificationRepository.countByCitizenIdAndIsReadFalse(citizenId);    }
             String message,
             String type) {
 
+        return createNotification(citizenId, complaintId, complaintTitle, title, message, type, "SYSTEM");
+    }
+
+    // Create citizen notification with updatedBy
+    public Notification createNotification(
+            Long citizenId,
+            Long complaintId,
+            String complaintTitle,
+            String title,
+            String message,
+            String type,
+            String updatedBy) {
+
         Notification notification = new Notification();
 
         notification.setCitizenId(citizenId);
+        notification.setRecipientRole("CITIZEN");
         notification.setComplaintId(complaintId);
         notification.setComplaintTitle(complaintTitle);
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setType(type);
+        notification.setUpdatedBy(updatedBy != null ? updatedBy : "SYSTEM");
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+
+        return notificationRepository.save(notification);
+    }
+
+    // =========================================================
+    // DEPARTMENT NOTIFICATIONS
+    // =========================================================
+
+    // Get notifications for a department by code or ID
+    public List<Notification> getNotificationsByDepartment(String deptKey) {
+        if (deptKey == null || deptKey.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return notificationRepository.findByDepartmentKeyOrderByCreatedAtDesc(deptKey.trim());
+    }
+
+    // Get unread notification count for a department
+    public long getDepartmentUnreadCount(String deptKey) {
+        if (deptKey == null || deptKey.trim().isEmpty()) {
+            return 0;
+        }
+        return notificationRepository.countUnreadByDepartmentKey(deptKey.trim());
+    }
+
+    // Create department notification (e.g. Received/Escalated or Admin update)
+    public Notification createDepartmentNotification(
+            Long departmentId,
+            String departmentCode,
+            Long complaintId,
+            String complaintTitle,
+            String title,
+            String message,
+            String type,
+            String updatedBy) {
+
+        Notification notification = new Notification();
+
+        notification.setDepartmentId(departmentId);
+        notification.setDepartmentCode(departmentCode);
+        notification.setRecipientRole("DEPARTMENT");
+        notification.setComplaintId(complaintId);
+        notification.setComplaintTitle(complaintTitle);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setType(type);
+        notification.setUpdatedBy(updatedBy != null ? updatedBy : "SYSTEM");
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
 
@@ -60,7 +123,7 @@ return notificationRepository.countByCitizenIdAndIsReadFalse(citizenId);    }
         return notificationRepository.save(notification);
     }
 
-    // Mark all notifications as read
+    // Mark all notifications as read for citizen
     public void markAllAsRead(Long citizenId) {
 
         List<Notification> notifications =
@@ -70,6 +133,15 @@ return notificationRepository.countByCitizenIdAndIsReadFalse(citizenId);    }
             notification.setRead(true);
         }
 
+        notificationRepository.saveAll(notifications);
+    }
+
+    // Mark all notifications as read for department
+    public void markAllDepartmentAsRead(String deptKey) {
+        List<Notification> notifications = getNotificationsByDepartment(deptKey);
+        for (Notification notification : notifications) {
+            notification.setRead(true);
+        }
         notificationRepository.saveAll(notifications);
     }
 }

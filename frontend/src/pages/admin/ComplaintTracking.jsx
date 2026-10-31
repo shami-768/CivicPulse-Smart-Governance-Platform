@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../../components/AdminNavbar";
+import { getSlaStatus } from "../../utils/slaUtils";
 import "../../styles/ComplaintTracking.css";
 
 const ComplaintTracking = () => {
@@ -9,6 +10,15 @@ const ComplaintTracking = () => {
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Live real-time SLA ticking clock
+  const [nowTime, setNowTime] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -168,22 +178,56 @@ const ComplaintTracking = () => {
 
                 <div>
                   <span>Target SLA Window</span>
-                  <strong style={{ color: "#0284c7" }}>
-                    {complaint.slaHours || (String(complaint.priority).toUpperCase() === "HIGH" || String(complaint.priority).toUpperCase() === "CRITICAL" ? 24 : String(complaint.priority).toUpperCase() === "MEDIUM" ? 48 : 72)} Hours
-                  </strong>
+                  {(() => {
+                    const sla = getSlaStatus(complaint, nowTime);
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "2px" }}>
+                        <strong style={{ color: "#0284c7" }}>
+                          {sla.slaHours} Hours Target
+                        </strong>
+                        <span
+                          style={{
+                            fontSize: "11.5px",
+                            fontWeight: "800",
+                            padding: "3px 8px",
+                            borderRadius: "8px",
+                            background: sla.bg,
+                            color: sla.color,
+                            border: `1px solid ${sla.borderColor}`,
+                            width: "fit-content",
+                            marginTop: "2px"
+                          }}
+                        >
+                          {sla.text}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div>
                   <span>Governance Hierarchy</span>
-                  <strong>
+                  <div style={{ marginTop: "2px" }}>
                     {complaint.isEscalated ? (
                       <span style={{ color: "#dc2626", fontWeight: "700" }}>🚨 Higher Municipal Authority</span>
                     ) : (
-                      <span style={{ color: "#16a34a" }}>Level 1 (Department Officer)</span>
+                      <span style={{ color: "#16a34a", fontWeight: "600" }}>Level 1 (Department Officer)</span>
                     )}
-                  </strong>
+                  </div>
                 </div>
               </div>
+
+              {/* Escalation Directive Box if Escalated */}
+              {complaint.isEscalated && (
+                <div className="description" style={{ background: "#fff1f2", border: "1px solid #fecdd3", borderLeft: "4px solid #e11d48", padding: "12px 14px", borderRadius: "8px" }}>
+                  <span style={{ color: "#be123c", fontWeight: "700", display: "block", marginBottom: "3px" }}>
+                    🚨 Escalated to Higher Authority
+                  </span>
+                  <p style={{ color: "#475569", margin: 0, fontSize: "13px" }}>
+                    {complaint.escalationReason || "Escalated for senior municipal executive command and priority directive."}
+                  </p>
+                </div>
+              )}
 
               <div className="description">
                 <span>Title</span>

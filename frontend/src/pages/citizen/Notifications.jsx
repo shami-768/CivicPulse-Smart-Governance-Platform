@@ -199,13 +199,16 @@ function Notifications() {
 
       case "progress":
       case "status":
+      case "admin_status":
+      case "admin_action":
         return <Clock3 size={22} />;
 
       case "warning":
         return <AlertCircle size={22} />;
 
       case "received":
-        return <FileText size={22} />;
+      case "escalated":
+        return <AlertCircle size={22} />;
 
       default:
         return <Bell size={22} />;
@@ -425,6 +428,25 @@ function Notifications() {
                               {formatTime(
                                 notification.createdAt
                               )}
+                            </span>
+                          )}
+
+                          {notification.updatedBy && (
+                            <span
+                              style={{
+                                background: notification.updatedBy === "ADMIN" ? "#fef2f2" : "#f0fdf4",
+                                color: notification.updatedBy === "ADMIN" ? "#b91c1c" : "#15803d",
+                                border: notification.updatedBy === "ADMIN" ? "1px solid #fecaca" : "1px solid #bbf7d0",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                fontWeight: "700",
+                                fontSize: "11px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px"
+                              }}
+                            >
+                              {notification.updatedBy === "ADMIN" ? "👑 Higher Municipal Authority" : "🏛️ Department Officer"}
                             </span>
                           )}
 

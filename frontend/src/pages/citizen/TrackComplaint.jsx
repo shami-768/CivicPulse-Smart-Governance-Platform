@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
+import { getSlaStatus } from "../../utils/slaUtils";
 import "../../styles/TrackComplaint.css";
 
 function TrackComplaint() {
@@ -20,6 +21,15 @@ function TrackComplaint() {
 
   // Geo-tag photo modal
   const [selectedPhotoModal, setSelectedPhotoModal] = useState(null);
+
+  // Real-time ticking clock for live SLA countdown
+  const [nowTime, setNowTime] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetchComplaints();
@@ -601,45 +611,133 @@ function TrackComplaint() {
                         </span>
 
                         <span className="detail-value" style={{ fontWeight: "700", color: "#0284c7" }}>
-                          {complaint.slaHours
-                            ? `${complaint.slaHours} Hours`
-                            : String(complaint.priority).toUpperCase() === "HIGH" || String(complaint.priority).toUpperCase() === "CRITICAL"
-                            ? "24 Hours"
-                            : String(complaint.priority).toUpperCase() === "MEDIUM"
-                            ? "48 Hours"
-                            : "72 Hours"}
+                          {complaint.slaHours || 48} Hours Target
                         </span>
                       </div>
 
                     </div>
 
-                    {/* Escalation Notification Banner */}
-                    {complaint.isEscalated && (
-                      <div
-                        style={{
-                          background: "#fff1f2",
-                          border: "1px solid #fecdd3",
-                          borderLeft: "4px solid #e11d48",
-                          borderRadius: "8px",
-                          padding: "10px 14px",
-                          marginTop: "12px",
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: "10px",
-                          fontSize: "13px"
-                        }}
-                      >
-                        <span style={{ fontSize: "16px" }}>🚨</span>
-                        <div>
-                          <strong style={{ color: "#be123c", display: "block", marginBottom: "2px" }}>
-                            Escalated to Higher Municipal Authority
-                          </strong>
-                          <span style={{ color: "#475569" }}>
-                            {complaint.escalationReason || "Under direct review by senior municipal executive command for priority resolution."}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                    {/* Live SLA Countdown Timer & Benchmark Card */}
+                    {(() => {
+                      const sla = getSlaStatus(complaint, nowTime);
+                      const isEscalatedOrBreached = complaint.isEscalated || sla.isBreached;
+
+                      return (
+                        <>
+                          <div
+                            className="sla-live-card"
+                            style={{
+                              background: sla.bg,
+                              border: `1px solid ${sla.borderColor}`,
+                              borderRadius: "10px",
+                              padding: "12px 16px",
+                              marginTop: "14px",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.03)"
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <span style={{ fontSize: "20px" }}>⏱️</span>
+                                <div>
+                                  <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                    Citizen Resolution SLA ({sla.slaHours}h Standard)
+                                  </div>
+                                  <div style={{ fontSize: "15px", fontWeight: "800", color: sla.color, marginTop: "2px" }}>
+                                    {sla.text}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  fontWeight: "800",
+                                  padding: "4px 12px",
+                                  borderRadius: "20px",
+                                  background: sla.isBreached ? "#dc2626" : sla.isResolved ? "#16a34a" : sla.color,
+                                  color: "#ffffff",
+                                  letterSpacing: "0.3px"
+                                }}
+                              >
+                                {sla.isBreached ? "🚨 SLA BREACHED" : sla.isResolved ? "✅ RESOLVED" : "⏳ ACTIVE TIMER"}
+                              </span>
+                            </div>
+
+                            {/* Live SLA Elapsed / Remaining Progress Bar */}
+                            <div style={{ marginTop: "10px" }}>
+                              <div
+                                style={{
+                                  width: "100%",
+                                  height: "8px",
+                                  background: "rgba(0, 0, 0, 0.08)",
+                                  borderRadius: "10px",
+                                  overflow: "hidden"
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: `${sla.progressPercent}%`,
+                                    height: "100%",
+                                    background: sla.isBreached ? "#dc2626" : sla.isResolved ? "#16a34a" : sla.color,
+                                    borderRadius: "10px",
+                                    transition: "width 0.4s ease"
+                                  }}
+                                ></div>
+                              </div>
+
+                              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", color: "#64748b", marginTop: "5px" }}>
+                                <span>
+                                  <strong>Registered:</strong>{" "}
+                                  {complaint.createdAt ? new Date(complaint.createdAt).toLocaleDateString() : "Recent"}
+                                </span>
+                                <span>
+                                  <strong>Target Deadline:</strong>{" "}
+                                  {sla.deadline
+                                    ? sla.deadline.toLocaleString([], {
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                    : "24-72h"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Escalation Notification Banner */}
+                          {isEscalatedOrBreached && (
+                            <div
+                              style={{
+                                background: "#fff1f2",
+                                border: "1px solid #fecdd3",
+                                borderLeft: "4px solid #e11d48",
+                                borderRadius: "8px",
+                                padding: "12px 14px",
+                                marginTop: "12px",
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "10px",
+                                fontSize: "13px"
+                              }}
+                            >
+                              <span style={{ fontSize: "18px" }}>🚨</span>
+                              <div>
+                                <strong style={{ color: "#be123c", display: "block", marginBottom: "2px" }}>
+                                  Escalated to Higher Municipal Authority
+                                </strong>
+                                <span style={{ color: "#475569", lineHeight: "1.4" }}>
+                                  {complaint.escalationReason ||
+                                    (sla.isBreached
+                                      ? `SLA BREACH: Exceeded ${sla.slaHours}-hour resolution SLA. Auto-escalated to Higher Authority for senior executive intervention.`
+                                      : "Escalated for senior municipal executive command and priority resolution.")}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
 
                     {/* Geo-Tagged Photo & Location Tracking Section */}
                     {(complaint.photoUrl || (complaint.latitude && complaint.longitude)) && (

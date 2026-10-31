@@ -148,6 +148,16 @@ function App() {
 
         <Route
           path="/department/escalations"
+          element={<DepartmentDashboard />}
+        />
+
+        <Route
+          path="/escalated-complaints"
+          element={<EscalatedComplaints />}
+        />
+
+        <Route
+          path="/higher-authority"
           element={<EscalatedComplaints />}
         />
 

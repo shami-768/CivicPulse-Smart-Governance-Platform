@@ -19,6 +19,14 @@ public class Notification {
 
     private Long citizenId;
 
+    private Long departmentId;
+
+    private String departmentCode;
+
+    private String recipientRole; // "CITIZEN", "DEPARTMENT", "ADMIN"
+
+    private String updatedBy; // "DEPARTMENT_OFFICER", "ADMIN", "SYSTEM"
+
     private Long complaintId;
 
     private String complaintTitle;
@@ -108,5 +116,37 @@ public class Notification {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public String getDepartmentCode() {
+        return departmentCode;
+    }
+
+    public void setDepartmentCode(String departmentCode) {
+        this.departmentCode = departmentCode;
+    }
+
+    public String getRecipientRole() {
+        return recipientRole;
+    }
+
+    public void setRecipientRole(String recipientRole) {
+        this.recipientRole = recipientRole;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 }

@@ -5,6 +5,7 @@ import "../styles/Navbar.css";
 function Navbar() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -13,6 +14,14 @@ function Navbar() {
       try {
         const parsed = JSON.parse(userStr);
         setCurrentUser(parsed);
+
+        const citizenId = parsed.citizenId || parsed.id || parsed.userId;
+        if (citizenId && (parsed.role === "CITIZEN" || !parsed.role)) {
+          fetch(`http://localhost:8081/api/notifications/citizen/${citizenId}/unread-count`)
+            .then((r) => r.ok ? r.json() : 0)
+            .then((cnt) => setUnreadCount(Number(cnt) || 0))
+            .catch(() => {});
+        }
       } catch (error) {
         console.error("Error reading user data:", error);
         setCurrentUser(null);
@@ -59,8 +68,23 @@ function Navbar() {
                 Track Complaint
               </Link>
 
-              <Link to="/notifications" className="nav-link">
+              <Link to="/notifications" className="nav-link" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                 Notifications
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      background: "#ef4444",
+                      color: "white",
+                      fontSize: "11px",
+                      fontWeight: "800",
+                      padding: "1px 6px",
+                      borderRadius: "10px",
+                      lineHeight: "1.3"
+                    }}
+                  >
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
 
               <Link to="/feedback" className="nav-link">

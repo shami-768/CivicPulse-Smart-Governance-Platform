@@ -1,5 +1,6 @@
 /* =========================================================
    CIVICPULSE ADMIN NAVBAR
+   Clean, Responsive, Zero-Overlap Design
    ========================================================= */
 
 .admin-nav {
@@ -19,13 +20,14 @@
 .admin-nav-container {
   width: 100%;
   max-width: 1600px;
-  min-height: 68px;
+  min-height: 64px;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 0 20px;
 
   display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 /* =========================================================
@@ -34,20 +36,18 @@
 
 .admin-nav-brand {
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
-  gap: 10px;
-
+  gap: 8px;
   cursor: pointer;
   user-select: none;
 }
 
 .brand-logo {
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 400;
   color: #ffffff;
-  letter-spacing: -0.6px;
+  letter-spacing: -0.5px;
   white-space: nowrap;
 }
 
@@ -57,57 +57,45 @@
 }
 
 .brand-badge {
-  padding: 4px 9px;
-
+  padding: 3px 8px;
   background: rgba(14, 165, 165, 0.16);
   border: 1px solid rgba(14, 165, 165, 0.35);
   border-radius: 20px;
-
   color: #2dd4bf;
   font-size: 10px;
   font-weight: 700;
-
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
 }
 
 /* =========================================================
-   NAVIGATION
+   NAVIGATION LINKS
    ========================================================= */
 
 .admin-nav-links {
-  flex: 1;
-  min-width: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
 .admin-nav-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-
-  padding: 9px 11px;
-
+  gap: 6px;
+  padding: 8px 11px;
   border-radius: 8px;
-
   color: #94a3b8;
   text-decoration: none;
-
-  font-size: 13px;
-  font-weight: 500;
-
+  font-size: 12.5px;
+  font-weight: 600;
   white-space: nowrap;
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+  flex-shrink: 0;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.15s ease;
 }
 
 .admin-nav-item:hover {
@@ -118,8 +106,7 @@
 .admin-nav-item.active {
   color: #ffffff;
   background: #0ea5a5;
-  font-weight: 600;
-
+  font-weight: 700;
   box-shadow: 0 2px 8px rgba(14, 165, 165, 0.3);
 }
 
@@ -128,7 +115,7 @@
 }
 
 .nav-icon {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -142,57 +129,45 @@
 
 .admin-nav-user {
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
-
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
-
   border-radius: 50%;
-
   background: #2563eb;
   color: #ffffff;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .user-info {
-  min-width: 80px;
-
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .user-name {
-  max-width: 120px;
-
+  max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-
   color: #38bdf8;
-
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
 }
 
 .user-role {
   color: #94a3b8;
-
   font-size: 10px;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 /* =========================================================
@@ -201,31 +176,20 @@
 
 .logout-btn {
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-
-  padding: 7px 11px;
-
+  gap: 4px;
+  padding: 6px 11px;
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 7px;
-
   color: #f87171;
-
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
-
   cursor: pointer;
-
   white-space: nowrap;
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .logout-btn:hover {
@@ -235,7 +199,7 @@
 }
 
 .logout-icon {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 /* =========================================================
@@ -244,18 +208,13 @@
 
 .mobile-menu-btn {
   display: none;
-
-  width: 40px;
-  height: 40px;
-
+  width: 38px;
+  height: 38px;
   padding: 8px;
-
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
-
   cursor: pointer;
-
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -264,21 +223,16 @@
 
 .mobile-menu-btn span {
   display: block;
-
-  width: 20px;
+  width: 18px;
   height: 2px;
-
   background: #ffffff;
   border-radius: 2px;
-
   transition: all 0.25s ease;
 }
 
 .mobile-menu-btn:hover {
   background: rgba(255, 255, 255, 0.08);
 }
-
-/* Hamburger animation */
 
 .mobile-menu-btn.open span:nth-child(1) {
   transform: translateY(6px) rotate(45deg);
@@ -298,13 +252,9 @@
 
 .mobile-menu {
   display: none;
-
   width: 100%;
-
   padding: 10px 16px 16px;
-
   background: #0b1f3a;
-
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -316,21 +266,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-
   width: 100%;
-
-  padding: 12px 14px;
+  padding: 11px 14px;
   margin-bottom: 4px;
-
   border-radius: 8px;
-
   color: #cbd5e1;
-
   text-decoration: none;
-
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
-
   transition: background 0.2s ease;
 }
 
@@ -347,27 +290,20 @@
 
 .mobile-nav-icon {
   width: 24px;
-
   text-align: center;
-
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .mobile-logout-btn {
   width: 100%;
-
   margin-top: 8px;
   padding: 11px;
-
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 8px;
-
   color: #f87171;
-
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
-
   cursor: pointer;
 }
 
@@ -377,105 +313,58 @@
 }
 
 /* =========================================================
-   TABLET
+   RESPONSIVE BREAKPOINTS (NO OVERLAP GUARANTEE)
    ========================================================= */
 
-@media (max-width: 1200px) {
-
+@media (max-width: 1280px) {
   .admin-nav-container {
-    padding: 0 20px;
-    gap: 14px;
+    padding: 0 16px;
+    gap: 12px;
   }
 
+  .admin-nav-links {
+    gap: 4px;
+  }
+
+  .admin-nav-item {
+    padding: 7px 9px;
+    font-size: 12px;
+    gap: 5px;
+  }
+
+  .user-name {
+    max-width: 90px;
+  }
+}
+
+@media (max-width: 1100px) {
   .brand-badge {
     display: none;
   }
 
   .admin-nav-item {
-    padding: 8px 8px;
-    gap: 5px;
-    font-size: 12px;
+    padding: 6px 7px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+
+  .nav-icon {
+    font-size: 13px;
   }
 
   .user-info {
     display: none;
   }
-
-  .admin-nav-user {
-    gap: 8px;
-  }
 }
 
-/* =========================================================
-   SMALL TABLET
-   ========================================================= */
-
-@media (max-width: 950px) {
-
+@media (max-width: 980px) {
   .admin-nav-container {
-    min-height: 64px;
-    padding: 0 18px;
-  }
-
-  .admin-nav-links {
-    gap: 2px;
-  }
-
-  .admin-nav-item {
-    padding: 8px 7px;
-  }
-
-  .nav-text {
-    display: none;
-  }
-
-  .nav-icon {
-    font-size: 17px;
-  }
-
-  .logout-btn span:last-child {
-    display: none;
-  }
-
-  .logout-btn {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-  }
-
-  .logout-icon {
-    font-size: 17px;
-  }
-}
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 700px) {
-
-  .admin-nav-container {
-    min-height: 62px;
-    padding: 0 14px;
-
-    justify-content: space-between;
-  }
-
-  .brand-logo {
-    font-size: 20px;
+    min-height: 60px;
+    padding: 0 16px;
   }
 
   .admin-nav-links {
     display: none;
-  }
-
-  .admin-nav-user {
-    margin-left: auto;
-  }
-
-  .user-avatar {
-    width: 34px;
-    height: 34px;
   }
 
   .logout-btn {
@@ -485,22 +374,9 @@
   .mobile-menu-btn {
     display: flex;
   }
-
-  .mobile-menu {
-    display: none;
-  }
-
-  .mobile-menu.show {
-    display: block;
-  }
 }
 
-/* =========================================================
-   VERY SMALL MOBILE
-   ========================================================= */
-
-@media (max-width: 400px) {
-
+@media (max-width: 480px) {
   .admin-nav-container {
     padding: 0 12px;
   }
@@ -510,12 +386,8 @@
   }
 
   .user-avatar {
-    width: 32px;
-    height: 32px;
-  }
-
-  .mobile-menu {
-    padding-left: 12px;
-    padding-right: 12px;
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
   }
 }

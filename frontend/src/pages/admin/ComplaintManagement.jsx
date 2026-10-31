@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../../components/AdminNavbar";
+import { getSlaStatus } from "../../utils/slaUtils";
 import "../../styles/ComplaintManagement.css";
 
 const INITIAL_MOCK_COMPLAINTS = [
@@ -88,6 +89,29 @@ const ComplaintManagement = () => {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [recalculating, setRecalculating] = useState(false);
 
+  // Live real-time SLA ticking clock
+  const [nowTime, setNowTime] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNowTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Department Officer Manual Escalation State
+  const [escalatingComplaint, setEscalatingComplaint] = useState(null);
+  const [escalateReason, setEscalateReason] = useState("");
+  const [escalateOfficerName, setEscalateOfficerName] = useState("");
+  const [escalatingLoading, setEscalatingLoading] = useState(false);
+  const [escalateSuccessMsg, setEscalateSuccessMsg] = useState("");
+  const [escalateErrorMsg, setEscalateErrorMsg] = useState("");
+
+  const userString = localStorage.getItem("user");
+  let loggedInUser = null;
+  try {
+    if (userString) loggedInUser = JSON.parse(userString);
+  } catch (err) {}
+
   const fetchComplaints = () => {
     setLoading(true);
     fetch("http://localhost:8081/api/complaints/priority-sorted")
@@ -136,6 +160,65 @@ const ComplaintManagement = () => {
       console.error("Recalculation error:", e);
     } finally {
       setRecalculating(false);
+    }
+  };
+
+  // Handle Department Officer manual escalation to Higher Authority
+  const handleEscalateSubmit = async (e) => {
+    e.preventDefault();
+    if (!escalatingComplaint) return;
+
+    setEscalatingLoading(true);
+    setEscalateErrorMsg("");
+    setEscalateSuccessMsg("");
+
+    try {
+      const officer =
+        escalateOfficerName.trim() ||
+        loggedInUser?.name ||
+        (loggedInUser?.departmentCode ? `${loggedInUser.departmentCode} Officer` : "Department Officer");
+
+      const reason =
+        escalateReason.trim() ||
+        "Escalated by Department Officer for higher-level municipal executive intervention.";
+
+      const res = await fetch(
+        `http://localhost:8081/api/complaints/${escalatingComplaint.id}/escalate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason, officerName: officer }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to submit escalation to server.");
+      }
+
+      const updated = await res.json();
+      setComplaints((prev) =>
+        prev.map((c) => (c.id === updated.id ? updated : c))
+      );
+
+      if (selectedComplaint && selectedComplaint.id === updated.id) {
+        setSelectedComplaint(updated);
+      }
+
+      setEscalateSuccessMsg(
+        `Complaint #${updated.id} successfully escalated to Higher Municipal Authority!`
+      );
+
+      setTimeout(() => {
+        setEscalatingComplaint(null);
+        setEscalateSuccessMsg("");
+      }, 1300);
+    } catch (err) {
+      console.error("Manual escalation error:", err);
+      setEscalateErrorMsg(
+        "Unable to escalate complaint. Please verify the backend service is running."
+      );
+    } finally {
+      setEscalatingLoading(false);
     }
   };
 
@@ -299,82 +382,177 @@ const ComplaintManagement = () => {
 
               <tbody>
                 {filteredComplaints.length > 0 ? (
-                  filteredComplaints.map((complaint) => (
-                    <tr key={complaint.id}>
-                      <td><strong>#{complaint.id}</strong></td>
-                      <td>{getPriorityBadge(complaint.priority, complaint.priorityScore)}</td>
-                      <td>{complaint.category}</td>
-                      <td>
-                        <div style={{ fontWeight: "500" }}>{complaint.location}</div>
-                        {(complaint.latitude && complaint.longitude) || complaint.photoUrl ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexWrap: "wrap" }}>
-                            {complaint.latitude && complaint.longitude && (
-                              <span
-                                style={{
-                                  fontSize: "11px",
-                                  color: "#15803d",
-                                  background: "#f0fdf4",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  border: "1px solid #bbf7d0",
-                                  fontFamily: "monospace"
-                                }}
-                                title={`GPS Coordinates: ${complaint.latitude}, ${complaint.longitude}`}
-                              >
-                                📍 {Number(complaint.latitude).toFixed(4)}, {Number(complaint.longitude).toFixed(4)}
-                              </span>
-                            )}
-                            {complaint.photoUrl && (
-                              <span
-                                style={{
-                                  fontSize: "11px",
-                                  color: "#0369a1",
-                                  background: "#e0f2fe",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  border: "1px solid #bae6fd",
-                                  fontWeight: "600"
-                                }}
-                              >
-                                📷 Geo Photo
-                              </span>
+                  filteredComplaints.map((complaint) => {
+                    const sla = getSlaStatus(complaint, nowTime);
+                    const isEscalatedOrBreached = complaint.isEscalated || sla.isBreached;
+
+                    return (
+                      <tr key={complaint.id} style={isEscalatedOrBreached ? { background: "#fff5f5" } : {}}>
+                        <td><strong>#{complaint.id}</strong></td>
+                        <td>{getPriorityBadge(complaint.priority, complaint.priorityScore)}</td>
+                        <td>{complaint.category}</td>
+                        <td>
+                          <div style={{ fontWeight: "500" }}>{complaint.location}</div>
+                          {(complaint.latitude && complaint.longitude) || complaint.photoUrl ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexWrap: "wrap" }}>
+                              {complaint.latitude && complaint.longitude && (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    color: "#15803d",
+                                    background: "#f0fdf4",
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    border: "1px solid #bbf7d0",
+                                    fontFamily: "monospace"
+                                  }}
+                                  title={`GPS Coordinates: ${complaint.latitude}, ${complaint.longitude}`}
+                                >
+                                  📍 {Number(complaint.latitude).toFixed(4)}, {Number(complaint.longitude).toFixed(4)}
+                                </span>
+                              )}
+                              {complaint.photoUrl && (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    color: "#0369a1",
+                                    background: "#e0f2fe",
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    border: "1px solid #bae6fd",
+                                    fontWeight: "600"
+                                  }}
+                                >
+                                  📷 Geo Photo
+                                </span>
+                              )}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "3px 8px",
+                                borderRadius: "10px",
+                                fontSize: "11px",
+                                fontWeight: "800",
+                                background: sla.bg,
+                                color: sla.color,
+                                border: `1px solid ${sla.borderColor}`,
+                                width: "fit-content",
+                                whiteSpace: "nowrap"
+                              }}
+                            >
+                              {sla.shortText}
+                            </span>
+                            <small style={{ color: "#64748b", fontSize: "11px", fontWeight: "600" }}>
+                              Target: {sla.slaHours}h SLA
+                            </small>
+                          </div>
+                        </td>
+                        <td>
+                          {complaint.createdAt
+                            ? new Date(complaint.createdAt).toLocaleDateString()
+                            : "Recent"}
+                        </td>
+                        <td>
+                          <span className={getStatusClass(complaint.status)}>
+                            {complaint.status}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+                            <button
+                              className="view-btn"
+                              onClick={() => setSelectedComplaint(complaint)}
+                            >
+                              View Breakdown
+                            </button>
+
+                            {/* Officer Manual Escalation Button or Escalated Badge */}
+                            {complaint.isEscalated ? (
+                              loggedInUser?.role === "ADMIN" ? (
+                                <button
+                                  style={{
+                                    background: "#fee2e2",
+                                    color: "#dc2626",
+                                    border: "1px solid #fca5a5",
+                                    padding: "6px 10px",
+                                    borderRadius: "6px",
+                                    fontWeight: "800",
+                                    fontSize: "11px",
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px"
+                                  }}
+                                  onClick={() => navigate("/admin/escalations")}
+                                  title="Escalated to Higher Authority. Click to view dossier."
+                                >
+                                  🚨 Escalated ↗
+                                </button>
+                              ) : (
+                                <span
+                                  style={{
+                                    background: "#fee2e2",
+                                    color: "#dc2626",
+                                    border: "1px solid #fca5a5",
+                                    padding: "6px 10px",
+                                    borderRadius: "6px",
+                                    fontWeight: "800",
+                                    fontSize: "11px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px"
+                                  }}
+                                  title="Escalated to Higher Municipal Authority. Status updates reserved for Administrator."
+                                >
+                                  🚨 Escalated (Admin Review)
+                                </span>
+                              )
+                            ) : (
+                              String(complaint.status || "").toUpperCase() !== "RESOLVED" &&
+                              String(complaint.status || "").toUpperCase() !== "REJECTED" && (
+                                <button
+                                  style={{
+                                    background: "#fff1f2",
+                                    color: "#e11d48",
+                                    border: "1px solid #fecdd3",
+                                    padding: "6px 10px",
+                                    borderRadius: "6px",
+                                    fontWeight: "700",
+                                    fontSize: "11px",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px"
+                                  }}
+                                  onClick={() => {
+                                    setEscalatingComplaint(complaint);
+                                    setEscalateReason("");
+                                    setEscalateOfficerName(
+                                      loggedInUser?.name ||
+                                        (loggedInUser?.departmentCode
+                                          ? `${loggedInUser.departmentCode} Officer`
+                                          : "")
+                                    );
+                                  }}
+                                  title="Chain / Escalate this complaint to Higher Municipal Authority"
+                                >
+                                  🔗 Chain to Higher Authority
+                                </button>
+                              )
                             )}
                           </div>
-                        ) : null}
-                      </td>
-                      <td>
-                        <strong style={{ color: "#0284c7", fontSize: "13px" }}>
-                          {complaint.slaHours
-                            ? `${complaint.slaHours}h Target`
-                            : String(complaint.priority).toUpperCase() === "CRITICAL"
-                            ? "12h Target"
-                            : String(complaint.priority).toUpperCase() === "HIGH"
-                            ? "24h Target"
-                            : String(complaint.priority).toUpperCase() === "MEDIUM"
-                            ? "48h Target"
-                            : "72h Target"}
-                        </strong>
-                      </td>
-                      <td>
-                        {complaint.createdAt
-                          ? new Date(complaint.createdAt).toLocaleDateString()
-                          : "Recent"}
-                      </td>
-                      <td>
-                        <span className={getStatusClass(complaint.status)}>
-                          {complaint.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="view-btn"
-                          onClick={() => setSelectedComplaint(complaint)}
-                        >
-                          View Breakdown
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="8" className="no-results">
@@ -645,31 +823,286 @@ const ComplaintManagement = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              flexWrap: "wrap",
+              gap: "10px",
               padding: "14px 24px",
               borderTop: "1px solid #e2e8f0",
               background: "#f8fafc",
               flexShrink: 0
             }}>
-              <span style={{ fontSize: "12px", color: "#64748b" }}>
-                Status: <strong style={{ color: "#0f172a" }}>{selectedComplaint.status}</strong>
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>
+                  Status: <strong style={{ color: "#0f172a" }}>{selectedComplaint.status}</strong>
+                </span>
+                {selectedComplaint.isEscalated && (
+                  <span style={{
+                    fontSize: "11px",
+                    fontWeight: "800",
+                    color: "#dc2626",
+                    background: "#fee2e2",
+                    padding: "3px 8px",
+                    borderRadius: "6px",
+                    border: "1px solid #fca5a5"
+                  }}>
+                    🚨 Routed to Higher Authority
+                  </span>
+                )}
+              </div>
 
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                {!selectedComplaint.isEscalated &&
+                  String(selectedComplaint.status || "").toUpperCase() !== "RESOLVED" &&
+                  String(selectedComplaint.status || "").toUpperCase() !== "REJECTED" && (
+                    <button
+                      onClick={() => {
+                        setEscalatingComplaint(selectedComplaint);
+                        setEscalateReason("");
+                        setEscalateOfficerName(
+                          loggedInUser?.name ||
+                            (loggedInUser?.departmentCode
+                              ? `${loggedInUser.departmentCode} Officer`
+                              : "")
+                        );
+                      }}
+                      style={{
+                        background: "#fff1f2",
+                        color: "#e11d48",
+                        border: "1px solid #fecdd3",
+                        padding: "8px 16px",
+                        borderRadius: "8px",
+                        fontWeight: "700",
+                        fontSize: "12.5px",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px"
+                      }}
+                    >
+                      🔗 Chain to Higher Authority
+                    </button>
+                  )}
+
+                <button
+                  onClick={() => setSelectedComplaint(null)}
+                  style={{
+                    background: "#0f172a",
+                    color: "white",
+                    border: "none",
+                    padding: "9px 22px",
+                    borderRadius: "8px",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    cursor: "pointer"
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Department Officer Manual Chain to Higher Authority */}
+      {escalatingComplaint && (
+        <div
+          onClick={() => {
+            if (!escalatingLoading) setEscalatingComplaint(null);
+          }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.75)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1100,
+            padding: "20px 14px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#ffffff",
+              borderRadius: "16px",
+              maxWidth: "540px",
+              width: "100%",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+              overflow: "hidden"
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              background: "linear-gradient(135deg, #be123c, #9f1239)",
+              color: "#ffffff",
+              padding: "18px 24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}>
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase", color: "#fecdd3" }}>
+                  DEPARTMENT OFFICER DIRECTIVE
+                </span>
+                <h3 style={{ margin: "2px 0 0 0", fontSize: "18px", fontWeight: "700" }}>
+                  🚨 Chain to Higher Municipal Authority
+                </h3>
+              </div>
               <button
-                onClick={() => setSelectedComplaint(null)}
+                onClick={() => setEscalatingComplaint(null)}
                 style={{
-                  background: "#0f172a",
-                  color: "white",
+                  background: "transparent",
                   border: "none",
-                  padding: "9px 22px",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                  fontSize: "13px",
-                  cursor: "pointer"
+                  color: "#ffffff",
+                  fontSize: "22px",
+                  cursor: "pointer",
+                  lineHeight: 1
                 }}
               >
-                Close
+                ✕
               </button>
             </div>
+
+            {/* Body */}
+            <form onSubmit={handleEscalateSubmit} style={{ padding: "20px 24px" }}>
+              {escalateSuccessMsg && (
+                <div style={{
+                  background: "#dcfce7",
+                  border: "1px solid #86efac",
+                  color: "#166534",
+                  padding: "12px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  marginBottom: "16px"
+                }}>
+                  ✅ {escalateSuccessMsg}
+                </div>
+              )}
+
+              {escalateErrorMsg && (
+                <div style={{
+                  background: "#fee2e2",
+                  border: "1px solid #fca5a5",
+                  color: "#991b1b",
+                  padding: "12px 14px",
+                  borderRadius: "8px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  marginBottom: "16px"
+                }}>
+                  ⚠️ {escalateErrorMsg}
+                </div>
+              )}
+
+              {/* Case Summary Card */}
+              <div style={{
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: "10px",
+                padding: "12px 16px",
+                marginBottom: "16px"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#64748b" }}>
+                  <span>CASE #{escalatingComplaint.id}</span>
+                  <strong style={{ color: "#0284c7" }}>{escalatingComplaint.category}</strong>
+                </div>
+                <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "15px", margin: "4px 0" }}>
+                  {escalatingComplaint.title || escalatingComplaint.category}
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569" }}>
+                  📍 {escalatingComplaint.location} | Priority: <strong>{escalatingComplaint.priority}</strong>
+                </div>
+              </div>
+
+              {/* Officer Name Field */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>
+                  Officer Name / Department Designation
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Rajesh Sharma (SWM Officer)"
+                  value={escalateOfficerName}
+                  onChange={(e) => setEscalateOfficerName(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "13.5px"
+                  }}
+                  required
+                />
+              </div>
+
+              {/* Escalation Reason Field */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>
+                  Reason for Higher Authority Escalation
+                </label>
+                <textarea
+                  rows="4"
+                  placeholder="Describe why higher authority directive or cross-department budget/interventions are required (e.g. Major road structural repair requiring municipal commissioner approval)..."
+                  value={escalateReason}
+                  onChange={(e) => setEscalateReason(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "13px",
+                    fontFamily: "inherit"
+                  }}
+                  required
+                ></textarea>
+                <small style={{ color: "#64748b", fontSize: "11.5px", display: "block", marginTop: "4px" }}>
+                  ℹ️ This case will immediately move to the Higher Authority Escalation Page and citizen will be notified.
+                </small>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setEscalatingComplaint(null)}
+                  disabled={escalatingLoading}
+                  style={{
+                    background: "#f1f5f9",
+                    color: "#475569",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "8px",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={escalatingLoading}
+                  style={{
+                    background: "linear-gradient(135deg, #be123c, #9f1239)",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "8px",
+                    fontWeight: "700",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(190, 18, 60, 0.3)"
+                  }}
+                >
+                  {escalatingLoading ? "Routing to Higher Authority..." : "🚨 Confirm Escalation"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -32,11 +32,13 @@ const AdminNavbar = () => {
       label: "Overview",
       path: "/admin/dashboard",
       icon: "📊",
+      adminOnly: true,
     },
     {
       label: "Department Dashboard",
-      path: isDepartmentPortal ? "/department/dashboard" : "/admin/departments",
+      path: "/department/dashboard",
       icon: "🏛️",
+      officerOnly: true,
     },
     {
       label: "Manage Complaints",
@@ -53,7 +55,17 @@ const AdminNavbar = () => {
       path: "/admin/tracking",
       icon: "🔍",
     },
-  ].filter((item) => !(isDepartmentPortal && item.label === "Overview"));
+    {
+      label: "Escalated Cases",
+      path: "/admin/escalations",
+      icon: "🚨",
+      adminOnly: true,
+    },
+  ].filter((item) => {
+    if (isDepartmentPortal && item.adminOnly) return false;
+    if (!isDepartmentPortal && item.officerOnly) return false;
+    return true;
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -110,10 +122,12 @@ const AdminNavbar = () => {
           {navItems.map((item) => {
             const isActive =
               location.pathname === item.path ||
-              ((item.path === "/admin/departments" || item.path === "/department/dashboard") &&
-                (location.pathname === "/admin/department-dashboard" ||
-                  location.pathname === "/department/dashboard" ||
-                  location.pathname === "/admin/departments"));
+              (item.path === "/department/dashboard" && location.pathname === "/department/dashboard") ||
+              (item.label === "Escalated Cases" &&
+                (location.pathname === "/admin/escalations" ||
+                  location.pathname === "/department/escalations" ||
+                  location.pathname === "/escalated-complaints" ||
+                  location.pathname === "/higher-authority"));
 
             return (
               <Link
@@ -192,10 +206,12 @@ const AdminNavbar = () => {
         {navItems.map((item) => {
           const isActive =
             location.pathname === item.path ||
-            ((item.path === "/admin/departments" || item.path === "/department/dashboard") &&
-              (location.pathname === "/admin/department-dashboard" ||
-                location.pathname === "/department/dashboard" ||
-                location.pathname === "/admin/departments"));
+            (item.path === "/department/dashboard" && location.pathname === "/department/dashboard") ||
+            (item.label === "Escalated Cases" &&
+              (location.pathname === "/admin/escalations" ||
+                location.pathname === "/department/escalations" ||
+                location.pathname === "/escalated-complaints" ||
+                location.pathname === "/higher-authority"));
 
           return (
             <Link

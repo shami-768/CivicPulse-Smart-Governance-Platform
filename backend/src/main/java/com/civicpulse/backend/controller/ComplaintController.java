@@ -184,7 +184,8 @@ public class ComplaintController {
     @PutMapping("/{id}/status")
     public ResponseEntity<Complaint> updateComplaintStatus(
             @PathVariable String id,
-            @RequestParam String status) {
+            @RequestParam String status,
+            @RequestParam(required = false) String updatedBy) {
 
         Long complaintId = parseComplaintId(id);
         if (complaintId == null) {
@@ -192,7 +193,7 @@ public class ComplaintController {
         }
 
         return ResponseEntity.ok(
-                complaintService.updateComplaintStatus(complaintId, status)
+                complaintService.updateComplaintStatus(complaintId, status, updatedBy)
         );
     }
 

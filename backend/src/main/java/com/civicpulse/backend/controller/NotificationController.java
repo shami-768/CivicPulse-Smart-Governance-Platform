@@ -54,12 +54,46 @@ public class NotificationController {
         );
     }
 
-    // Mark all notifications as read
+    // Mark all notifications as read for citizen
     @PutMapping("/citizen/{citizenId}/read-all")
     public ResponseEntity<Void> markAllAsRead(
             @PathVariable Long citizenId) {
 
         notificationService.markAllAsRead(citizenId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // =========================================================
+    // DEPARTMENT NOTIFICATIONS
+    // =========================================================
+
+    // Get notifications for a department (by department code like "WSS" or numeric department ID)
+    @GetMapping("/department/{deptKey}")
+    public ResponseEntity<List<Notification>> getDepartmentNotifications(
+            @PathVariable String deptKey) {
+
+        return ResponseEntity.ok(
+                notificationService.getNotificationsByDepartment(deptKey)
+        );
+    }
+
+    // Get unread count for a department
+    @GetMapping("/department/{deptKey}/unread-count")
+    public ResponseEntity<Long> getDepartmentUnreadCount(
+            @PathVariable String deptKey) {
+
+        return ResponseEntity.ok(
+                notificationService.getDepartmentUnreadCount(deptKey)
+        );
+    }
+
+    // Mark all notifications as read for a department
+    @PutMapping("/department/{deptKey}/read-all")
+    public ResponseEntity<Void> markAllDepartmentAsRead(
+            @PathVariable String deptKey) {
+
+        notificationService.markAllDepartmentAsRead(deptKey);
 
         return ResponseEntity.noContent().build();
     }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import AdminNavbar from "../../components/AdminNavbar";
+import { getSlaStatus, isAutoSlaBreach } from "../../utils/slaUtils";
 import "../../styles/EscalatedComplaints.css";
 
 const CANONICAL_DEPARTMENTS = [
@@ -29,11 +30,11 @@ const EscalatedComplaints = () => {
   const [actionSuccess, setActionSuccess] = useState("");
   const [nowTime, setNowTime] = useState(Date.now());
 
-  // Real-time ticking clock for live SLA countdowns
+  // Real-time ticking clock for live SLA countdowns (1-second precision)
   useEffect(() => {
     const timer = setInterval(() => {
       setNowTime(Date.now());
-    }, 10000);
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -64,45 +65,14 @@ const EscalatedComplaints = () => {
     fetchData();
   }, []);
 
-  // Format countdown or breach time
+  // Format countdown or breach time using shared SLA utility
   const getSlaTimeStatus = (complaint) => {
-    if (complaint.status === "RESOLVED") {
-      return { text: "Resolved", isBreached: false, color: "#16a34a", bg: "#dcfce7" };
-    }
-    if (!complaint.slaDeadline) {
-      const slaH = complaint.slaHours || 48;
-      return { text: `Target: ${slaH}h`, isBreached: false, color: "#475569", bg: "#f1f5f9" };
-    }
-
-    const deadline = new Date(complaint.slaDeadline).getTime();
-    const diffMs = deadline - nowTime;
-
-    if (diffMs > 0) {
-      const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
-      const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      return {
-        text: `⏳ ${hoursLeft}h ${minsLeft}m left`,
-        isBreached: false,
-        color: hoursLeft < 6 ? "#ea580c" : "#0284c7",
-        bg: hoursLeft < 6 ? "#ffedd5" : "#e0f2fe",
-      };
-    } else {
-      const breachedMs = Math.abs(diffMs);
-      const hoursOver = Math.floor(breachedMs / (1000 * 60 * 60));
-      const minsOver = Math.floor((breachedMs % (1000 * 60 * 60)) / (1000 * 60));
-      return {
-        text: `🚨 Breached by ${hoursOver}h ${minsOver}m`,
-        isBreached: true,
-        color: "#dc2626",
-        bg: "#fee2e2",
-      };
-    }
+    return getSlaStatus(complaint, nowTime);
   };
 
   // Determine trigger type
   const isAutoBreach = (complaint) => {
-    const reason = (complaint.escalationReason || "").toLowerCase();
-    return reason.includes("sla breach") || reason.includes("auto-escalated");
+    return isAutoSlaBreach(complaint);
   };
 
   // Filter complaints
@@ -139,12 +109,17 @@ const EscalatedComplaints = () => {
     e.preventDefault();
     if (!selectedCase) return;
 
+    if (String(selectedCase.status).toUpperCase() === "RESOLVED") {
+      alert("This complaint has already been resolved and closed permanently. Its status cannot be modified.");
+      return;
+    }
+
     setActionLoading(true);
     setActionSuccess("");
 
     try {
       const response = await fetch(
-        `http://localhost:8081/api/complaints/${selectedCase.id}/status?status=${encodeURIComponent(newStatus)}`,
+        `http://localhost:8081/api/complaints/${selectedCase.id}/status?status=${encodeURIComponent(newStatus)}&updatedBy=ADMIN`,
         { method: "PUT" }
       );
 
@@ -499,49 +474,83 @@ const EscalatedComplaints = () => {
                 </p>
               </div>
 
-              <form onSubmit={handleHigherAuthorityAction} className="intervention-form">
-                <h3>Executive Action & Resolution</h3>
-
-                <div className="form-field">
-                  <label>Update Status Directive</label>
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    required
-                  >
-                    <option value="IN_PROGRESS">🟡 Mark In Progress (Executive Priority Assigned)</option>
-                    <option value="RESOLVED">🟢 Resolve Complaint (Higher Authority Verified)</option>
-                    <option value="REJECTED">🔴 Reject / Invalidate Complaint</option>
-                  </select>
-                </div>
-
-                <div className="form-field">
-                  <label>Executive Directive / Internal Note (Optional)</label>
-                  <textarea
-                    rows="3"
-                    placeholder="Enter supervisory notes or special instructions for the department..."
-                    value={resolutionNote}
-                    onChange={(e) => setResolutionNote(e.target.value)}
-                  ></textarea>
-                </div>
-
-                <div className="modal-actions">
+              {String(selectedCase.status).toUpperCase() === "RESOLVED" ? (
+                <div style={{
+                  background: "#f0fdf4",
+                  border: "1.5px solid #86efac",
+                  borderRadius: "10px",
+                  padding: "18px 20px",
+                  marginTop: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                  color: "#166534"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "28px" }}>✅</span>
+                    <div>
+                      <strong style={{ display: "block", fontSize: "15px" }}>Case Resolved & Permanently Closed</strong>
+                      <span style={{ fontSize: "13px", color: "#15803d" }}>
+                        This complaint has been verified and marked as RESOLVED by Municipal Administration. Further modifications are locked under permanent closure governance.
+                      </span>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     className="cancel-btn"
                     onClick={() => setSelectedCase(null)}
+                    style={{ padding: "8px 18px", fontSize: "13px" }}
                   >
-                    Close
-                  </button>
-                  <button
-                    type="submit"
-                    className="submit-directive-btn"
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? "Applying Directive..." : "⚡ Execute Directive"}
+                    Close Dossier
                   </button>
                 </div>
-              </form>
+              ) : (
+                <form onSubmit={handleHigherAuthorityAction} className="intervention-form">
+                  <h3>Executive Action & Resolution</h3>
+
+                  <div className="form-field">
+                    <label>Update Status Directive</label>
+                    <select
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value)}
+                      required
+                    >
+                      <option value="IN_PROGRESS">🟡 Mark In Progress (Executive Priority Assigned)</option>
+                      <option value="RESOLVED">🟢 Resolve Complaint (Higher Authority Verified)</option>
+                      <option value="REJECTED">🔴 Reject / Invalidate Complaint</option>
+                    </select>
+                  </div>
+
+                  <div className="form-field">
+                    <label>Executive Directive / Internal Note (Optional)</label>
+                    <textarea
+                      rows="3"
+                      placeholder="Enter supervisory notes or special instructions for the department..."
+                      value={resolutionNote}
+                      onChange={(e) => setResolutionNote(e.target.value)}
+                    ></textarea>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="cancel-btn"
+                      onClick={() => setSelectedCase(null)}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="submit"
+                      className="submit-directive-btn"
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? "Applying Directive..." : "⚡ Execute Directive"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>
