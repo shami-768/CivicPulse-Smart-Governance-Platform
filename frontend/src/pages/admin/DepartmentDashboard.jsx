@@ -642,17 +642,17 @@ const DepartmentDashboard = () => {
               {unreadCount > 0 && <span className="dept-notif-badge">{unreadCount}</span>}
             </button>
 
-            {/* Time Range Filter */}
-            <select
-              className="date-filter-select"
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-            >
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-              <option value="year">This Year</option>
-            </select>
+          {/* Time Range Filter */}
+          <select
+            className="date-filter-select"
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+          >
+            <option value="7d">Last 7 Days</option>
+            <option value="30d">Last 30 Days</option>
+            <option value="90d">Last 90 Days</option>
+            <option value="year">This Year</option>
+          </select>
 
             {/* Export Report Action */}
             <button className="export-btn" onClick={() => setShowExportModal(true)}>
